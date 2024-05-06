@@ -24,19 +24,20 @@ def define_model(input_shape):
     return model
 
 def train_student(x_train, labelizer, nb_epochs=20):
-    y_train = labelizer(x_train)
+    y_train = np.asarray(labelizer(x_train))
 
-    model = st_model(x_train.shape[1:])
+    model = define_model(x_train.shape[1:])
 
-    model.fit(x_train, y_train, epochs = nb_epochs, versbose=False)
+    model.fit(x_train, y_train, epochs = nb_epochs, verbose=True)
 
-    return model, (x_test, y_test, true_y_test)
+    return model
 
 def eval_student_model(model, x_test, true_y_test, labelizer):
-    y_test = labelizer(x_test)
-    print('Test 2 : evaluation the student on aggregated labels')
+    y_test = np.asarray(labelizer(x_test))
+    print('Test 1 : evaluation the student on aggregated labels')
     eval1 = model.evaluate(x_test, y_test)
     print(f"**** Results \n\t-loss : {eval1[0]}\n\t-accuracy : {eval1[1]}")
+    print("-------------------")
     print('Test 2 : evaluation the student on true labels')
     eval2 = model.evaluate(x_test, true_y_test)
     print(f"**** Results \n\t-loss : {eval2[0]}\n\t-accuracy : {eval2[1]}")

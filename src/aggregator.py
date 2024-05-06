@@ -1,17 +1,18 @@
 import numpy as np
 
 teachers = []
-def __init(tchrs):
-    global teachers = tchrs
+def init_teachers(tchrs):
+    global teachers
+    teachers = tchrs
 
 def agg_noisy_vote(data_to_label, gamma=0.1):
     # predictions from teachers
     preds = []
     for tchr in teachers:
         pred = tchr.predict(data_to_label)
-        pred = np.arround(pred)
+        pred = np.round(pred)
         preds.append([p[0] for p in pred])
-    preds = np.asarray(preds)
+    preds = np.asarray(preds, dtype=np.int32)
     # voting
     labels = []
     for x in range(np.shape(preds)[1]):

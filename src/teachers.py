@@ -44,7 +44,7 @@ def train_teachers(dataset, nb_tchrs, nb_epochs=20):
 
         model = define_model((x_train.shape[-1],))
 
-        model.fit(x_train, y_train, epochs=nb_epochs, verbose=False)
+        model.fit(x_train, y_train, epochs=nb_epochs, verbose=True)
         fi.append(model)
     print("Done")
 
