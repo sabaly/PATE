@@ -2,7 +2,8 @@ import numpy as np
 
 def fairness(model, x_test, y_test, group_test):
     yhat = np.round(model.predict(x_test))
-    acc = float(format(np.mean(yhat[(y_test == 1)]), "0.4f"))
+    acc = float(format(model.evaluate(x_test, y_test)[1], "0.4f"))
+    #acc = float(format(np.mean(yhat[(y_test == 1)]), "0.4f"))
 
     p_grp_tpr = np.mean(yhat[(y_test == 1) & (group_test == 1)])
     up_grp_tpr = np.mean(yhat[(y_test == 1) & (group_test == 2)])
@@ -16,12 +17,13 @@ def fairness(model, x_test, y_test, group_test):
 
     return {"EOD": eod, "SPD": spd, "ACC": acc}
 
-def stats(teachers, x_test, y_test, s_test):
+def stats(nb_teachers, teachers, subsets):
     accuracies = []
     eod = []
     spd = []
-    for teacher in teachers:
-        stat = fairness(teacher, x_test, y_test, s_test)
+    for i in range(nb_teachers):
+        params = [subsets[i][1], subsets[i][3], subsets[i][5]]
+        stat = fairness(teachers[i], *params)
         accuracies.append(stat["ACC"])
         eod.append(stat["EOD"])
         spd.append(stat["SPD"])

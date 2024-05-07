@@ -2,7 +2,6 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 from data_loader import *
-from partition import *
 import numpy as np
 
 def define_model(input_shape):
@@ -31,15 +30,12 @@ def train_teacher(x_train, y_train, nb_epochs=20):
 
     return model
 
-def train_teachers(dataset, nb_tchrs, nb_epochs=20):
-    x_train, x_test, y_train, y_test, s_train, s_test= get(dataset)
-    subsets = basic_partition(x_train, y_train, nb_tchrs)
-
+def train_teachers(subsets, nb_tchrs, nb_epochs=20):
     fi = []
-    #print("\nTraining teachers...", end="")
+
     i = 0
     for subset in subsets:
-        x_train, y_train = subset
+        x_train, _, y_train, _, _, _ = subset
         x_train, y_train = np.array(x_train), np.array(y_train)
 
         model = define_model((x_train.shape[-1],))
@@ -51,7 +47,7 @@ def train_teachers(dataset, nb_tchrs, nb_epochs=20):
         print(f"\rTraining Teachers: {pg}%", end="")
     print(f"\rTraining Teachers: 100%")
 
-    return fi, (x_test, y_test, s_train, s_test)
+    return fi
 
 
 def eval_teacher_model(model, x_test, y_test):

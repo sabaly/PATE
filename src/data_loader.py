@@ -3,6 +3,8 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from art.utils import load_mnist
 import numpy as np
+from partition import *
+from random import randint
 
 from folktables import ACSDataSource, ACSEmployment
 
@@ -39,24 +41,32 @@ def clear_adult_data(adult):
     Y = labels.copy()
     X = features.copy()
     S = features['sex'].copy()
-    X_train, X_test, Y_train , Y_test, S_train, S_test = train_test_split(X, Y, S, test_size=0.2)
 
-    x_train = np.array(X_train)
-    y_train = np.array(Y_train)
-    s_train = np.array(S_train)
-    s_test = np.array(S_test)
-
-    x_test = np.array(X_test)
-    y_test = np.array(Y_test)
-    return x_train, x_test, y_train, y_test, s_train, s_test
-
-def load_ACSDataSource(year=2015, horizon="1-Year"):
-    return ACSDataSource(survey_year=year, horizon=horizon, survey="person")
+    return X, Y, S 
 
 
-def get(dataset_name):
+states = ["HI", "CA", "AK", "PR", "NV", "NM", "OK", "NY", "WA", "AZ", "NJ", "MD"
+"TX", "VA", "MA", "GA", "CT", "OR", "IL", "RI", "NC", "CO", "DE", "LA", "UT",
+"FL", "MS", "SC", "AR", "SD", "AL", "MI", "KS", "ID", "MN", "MT", "OH", "IN",
+"TN", "PA", "NE", "MO", "WY", "ND", "WI", "KY", "NH", "ME", "IA", "VT", "WV"]
+def load_ACSEmployment(year=2018, horizon="1-Year", states=states):
+    data_src = ACSDataSource(survey_year=year, horizon=horizon, survey="person")
+    subsets = []
+    student = states.pop(randint(0,49))
+    for st in states:
+        acs_data = data_src.get_data(states=[st], download=True)
+        features, labels, group = ACSEmployment.df_to_numpy(acs_data)
+        x_train, x_test, y_train, y_test, s_train, s_test = train_test_split(
+            features, labels, group, test_size=0.2, random_state=0
+        )
+        subsets.append((x_train, x_test, y_train, y_test, s_train, s_test))
+    return subsets, student
+
+def get(dataset_name, nb_teachers=49):
     if dataset_name == "adult":
-        return clear_adult_data(ld_adult())
+        X,Y,S = clear_adult_data(ld_adult())
+        subsets = adult_basic_partition(X, Y, S, nb_teachers)
+        return subsets
     elif dataset_name == "mnist":
         (x_train, train_label), (x_test, test_label), _, _ = load_mnist()
         y_train = []
@@ -67,6 +77,8 @@ def get(dataset_name):
             y_test.append(int(np.argmax(test_label[i])))
         y_train, y_test = np.array(y_train), np.array(y_test)
         return x_train, x_test, y_train, y_test
+    elif dataset_name == "acsemployment":
+        return load_ACSEmployment(states=states[:nb_teachers])
     else:
         return None
 

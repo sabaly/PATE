@@ -30,17 +30,34 @@ else:
     dataset = sys.argv[1]
     nb_teachers = int(sys.argv[2])
 
+# prepare datasets !
+subsets = get(dataset, nb_teachers)
+
 # train teachers
-teachers, (x_test, y_test, s_train, s_test) = train_teachers(dataset, nb_teachers)
+teachers = train_teachers(subsets, nb_teachers)
 init_teachers(teachers)
 
-accuracies, eod, spd = stats(teachers, x_test, y_test, s_test)
+accuracies, eod, spd = stats(nb_teachers, teachers, subsets)
 
-# fake student train data
-train_size = int(0.8*len(x_test))
-x_train = x_test[:train_size]
-x_test = x_test[train_size:]
-true_y_test = y_test[train_size:]
+# statudent dataset
+if dataset == "adult":
+    # fake student train data
+    x_test = None
+    y_test = None
+    for subset in subsets:
+        if x_test is None:
+            x_test = subset[1]
+            y_test = subset[3]
+        else:
+            x_test = np.concatenate((x_test, subset[1]))
+            y_test = np.concatenate((y_test, subset[3]))
+    train_size = int(0.8*len(x_test))
+    x_train = x_test[:train_size]
+    x_test = x_test[train_size:]
+    true_y_test = y_test[train_size:]
+else:
+    # load student dataset
+    pass
 # define aggregation methode
 aggregator = agg_noisy_vote
 while True:
@@ -56,16 +73,13 @@ while True:
         x1 = range(len(accuracies))
         x2 = [x + b_width for x in x1]
         x3 = [x + b_width for x in x2]
-        print(accuracies, "\n", eod, "\n", spd)
-        tchr_ax.bar(x1, accuracies, width = b_width, color=colors[color_index], label=["accuracy"])
-        color_index += 1
-        tchr_ax.bar(x2, eod, width = b_width, color=[colors[color_index] for _ in eod],label=["EOD"])
-        color_index += 1
-        tchr_ax.bar(x3, spd, width = b_width, color=[colors[color_index] for _ in spd], label=["SPD"])
-        color_index += 1
-        tchr_ax.set_xticks([x + b_width/4 for x in x2], [t+1 fot t in range(nb_teachers)])
-        tchr_ax.set_yticks(np.arange(0, 1, step=0.1))
-        tchr_ax.set_ylim([0,1])
+        #print(accuracies, "\n", eod, "\n", spd)
+        tchr_ax.bar(x1, accuracies, width = b_width, color=colors[0], label="accuracy")
+        tchr_ax.bar(x2, eod, width = b_width, color=[colors[1] for _ in eod],label="EOD")
+        tchr_ax.bar(x3, spd, width = b_width, color=[colors[2] for _ in spd], label="SPD")
+        tchr_ax.set_xticks([x + b_width/4 for x in x2], [t+1 for t in range(nb_teachers)])
+        tchr_ax.set_yticks(np.arange(0, 1.1, step=0.1))
+        tchr_ax.set_ylim([0,1.1])
         tchr_ax.set_xlabel("Teachers")
         tchr_ax.set_ylabel("Metrics")
         plt.legend()
