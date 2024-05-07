@@ -4,6 +4,8 @@ from sklearn.model_selection import train_test_split
 from art.utils import load_mnist
 import numpy as np
 
+from folktables import ACSDataSource, ACSEmployment
+
 """ Adult dataset """
 def ld_adult():
     # make sure you've installed the repo : pip install ucimlrepo
@@ -31,19 +33,26 @@ def clear_adult_data(adult):
     features['occupation'] = le.fit_transform(features['occupation'])
     features['relationship'] = le.fit_transform(features['relationship'])
     features['native-country'] = le.fit_transform(features['native-country'])
-    features['sex'] = [1 if x=='Male' else 0 for x in features['sex']]
-    features['race'] = [1 if x=='White' else 0 for x in features['sex']]
+    features['sex'] = [1 if x=='Male' else 2 for x in features['sex']]
+    features['race'] = [1 if x=='White' else 2 for x in features['sex']]
 
     Y = labels.copy()
     X = features.copy()
-    X_train, X_test, Y_train , Y_test = train_test_split(X, Y, test_size=0.2)
+    S = features['sex'].copy()
+    X_train, X_test, Y_train , Y_test, S_train, S_test = train_test_split(X, Y, S, test_size=0.2)
 
     x_train = np.array(X_train)
     y_train = np.array(Y_train)
+    s_train = np.array(S_train)
+    s_test = np.array(S_test)
 
     x_test = np.array(X_test)
     y_test = np.array(Y_test)
-    return x_train, x_test, y_train, y_test
+    return x_train, x_test, y_train, y_test, s_train, s_test
+
+def load_ACSDataSource(year=2015, horizon="1-Year"):
+    return ACSDataSource(survey_year=year, horizon=horizon, survey="person")
+
 
 def get(dataset_name):
     if dataset_name == "adult":
