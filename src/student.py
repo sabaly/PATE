@@ -41,6 +41,7 @@ def eval_student_model(model, x_test, true_y_test, labelizer):
     print('Test 2 : evaluation the student on true labels')
     eval2 = model.evaluate(x_test, true_y_test)
     print(f"**** Results \n\t-loss : {eval2[0]}\n\t-accuracy : {eval2[1]}")
+    return y_test
     
 
 

@@ -52,7 +52,7 @@ states = ["HI", "CA", "AK", "PR", "NV", "NM", "OK", "NY", "WA", "AZ",  "MD",
 def load_ACSEmployment(year=2018, horizon="1-Year", states=states):
     data_src = ACSDataSource(survey_year=year, horizon=horizon, survey="person")
     subsets = []
-    student = states.pop(randint(0,len(states)-1))
+    student = states.pop(2) #randint(0,len(states)-1)
     for st in states:
         acs_data = data_src.get_data(states=[st], download=True)
         features, labels, group = ACSEmployment.df_to_numpy(acs_data)

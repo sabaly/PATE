@@ -60,7 +60,7 @@ else:
     # load student dataset
     (x_train, x_test, y_train, y_test, s_train, s_test) = load_student_data(student)
 # define aggregation methode
-aggregator = agg_noisy_vote
+aggregator = gaussian_noisy_vote
 student_trained = False
 while True:
     action = int(input("1. Update aggregator \t 2. Train student \t 3. Stats\n(0 exit)>>"))
@@ -68,9 +68,9 @@ while True:
         aggregator = update_aggregator()
     elif action==2:
         st_model = train_student(x_train, aggregator)
-        eval_student_model(st_model, x_test, y_test, aggregator)
+        y_pred = eval_student_model(st_model, x_test, y_test, aggregator)
+        st_stats = fairness(st_model, x_test, y_pred, s_test)
         student_trained = True
-        st_stats = fairness(st_model, x_test, y_test, s_test)
     elif action==3:
         fig, (tchr_ax, st_ax)= plt.subplots(1, 2, sharey=True)
         b_width = 0.3
