@@ -45,14 +45,14 @@ def clear_adult_data(adult):
     return X, Y, S 
 
 
-states = ["HI", "CA", "AK", "PR", "NV", "NM", "OK", "NY", "WA", "AZ", "NJ", "MD"
+states = ["HI", "CA", "AK", "PR", "NV", "NM", "OK", "NY", "WA", "AZ",  "MD",
 "TX", "VA", "MA", "GA", "CT", "OR", "IL", "RI", "NC", "CO", "DE", "LA", "UT",
 "FL", "MS", "SC", "AR", "SD", "AL", "MI", "KS", "ID", "MN", "MT", "OH", "IN",
-"TN", "PA", "NE", "MO", "WY", "ND", "WI", "KY", "NH", "ME", "IA", "VT", "WV"]
+"TN", "PA", "NE", "MO", "WY", "ND", "WI", "KY", "NH", "ME", "IA", "VT", "WV"] # "NJ"
 def load_ACSEmployment(year=2018, horizon="1-Year", states=states):
     data_src = ACSDataSource(survey_year=year, horizon=horizon, survey="person")
     subsets = []
-    student = states.pop(randint(0,49))
+    student = states.pop(randint(0,len(states)-1))
     for st in states:
         acs_data = data_src.get_data(states=[st], download=True)
         features, labels, group = ACSEmployment.df_to_numpy(acs_data)
@@ -62,11 +62,20 @@ def load_ACSEmployment(year=2018, horizon="1-Year", states=states):
         subsets.append((x_train, x_test, y_train, y_test, s_train, s_test))
     return subsets, student
 
+def load_student_data(state, year=2018, horizon="1-Year"):
+    data_src = ACSDataSource(survey_year=year, horizon=horizon, survey="person")
+    acs_data = data_src.get_data(states=[state], download=True)
+    features, labels, group = ACSEmployment.df_to_numpy(acs_data)
+    x_train, x_test, y_train, y_test, s_train, s_test = train_test_split(
+            features, labels, group, test_size=0.2, random_state=0
+        )
+    return (x_train, x_test, y_train, y_test, s_train, s_test)
+
 def get(dataset_name, nb_teachers=49):
     if dataset_name == "adult":
         X,Y,S = clear_adult_data(ld_adult())
         subsets = adult_basic_partition(X, Y, S, nb_teachers)
-        return subsets
+        return subsets, None
     elif dataset_name == "mnist":
         (x_train, train_label), (x_test, test_label), _, _ = load_mnist()
         y_train = []
@@ -78,7 +87,7 @@ def get(dataset_name, nb_teachers=49):
         y_train, y_test = np.array(y_train), np.array(y_test)
         return x_train, x_test, y_train, y_test
     elif dataset_name == "acsemployment":
-        return load_ACSEmployment(states=states[:nb_teachers])
+        return load_ACSEmployment(states=states[:nb_teachers+1])
     else:
         return None
 
