@@ -21,15 +21,18 @@ with warnings.catch_warnings():
 
 # define initial parameters  
 # teachers dataset, nombers of teachers
-
+list_dataset = {"adult", "acsemployment"}
 if len(sys.argv) < 3:
     print("Usage : app.py <dataset_name> <number of teachers>")
     dataset = "adult"
     nb_teachers = 25
     print(f"Default : dataset --> {dataset} | number of teacher --> {nb_teachers}")
-else:
+elif sys.argv[1] in list_dataset:
     dataset = sys.argv[1]
     nb_teachers = int(sys.argv[2])
+else:
+    print(f"{sys.argv[1]} is not available !")
+    exit(1)
 
 # prepare datasets !
 subsets, student = get(dataset, nb_teachers)
@@ -39,6 +42,7 @@ teachers = train_teachers(subsets, nb_teachers)
 init_teachers(teachers)
 
 accuracies, eod, spd = stats(nb_teachers, teachers, subsets)
+set_metrics(eod)
 
 # statudent dataset
 if student == None:
@@ -63,7 +67,7 @@ else:
 aggregator = gaussian_noisy_vote
 student_trained = False
 while True:
-    action = int(input("1. Update aggregator \t 2. Train student \t 3. Stats\n(0 exit)>>"))
+    action = int(input("1. Update aggregator \t 2. Train student \t 3. Stats\n(0 exit)>> "))
     if action == 1:
         aggregator = update_aggregator(aggregator)
     elif action==2:
