@@ -65,14 +65,14 @@ student_trained = False
 while True:
     action = int(input("1. Update aggregator \t 2. Train student \t 3. Stats\n(0 exit)>>"))
     if action == 1:
-        aggregator = update_aggregator()
+        aggregator = update_aggregator(aggregator)
     elif action==2:
         st_model = train_student(x_train, aggregator)
         y_pred = eval_student_model(st_model, x_test, y_test, aggregator)
         st_stats = fairness(st_model, x_test, y_pred, s_test)
         student_trained = True
     elif action==3:
-        fig, (tchr_ax, st_ax)= plt.subplots(1, 2, sharey=True)
+        fig, (tchr_ax, st_ax)= plt.subplots(2, 1, sharey=True)
         b_width = 0.3
         x1 = range(len(accuracies))
         x2 = [x + b_width for x in x1]
