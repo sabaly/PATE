@@ -41,7 +41,7 @@ subsets, student = get(dataset, nb_teachers)
 teachers = train_teachers(subsets, nb_teachers)
 init_teachers(teachers)
 
-accuracies, eod, spd = stats(nb_teachers, teachers, subsets)
+accuracies, eod, spd, di = stats(nb_teachers, teachers, subsets)
 set_metrics(eod)
 
 # statudent dataset
@@ -81,10 +81,12 @@ while True:
         x1 = range(len(accuracies))
         x2 = [x + b_width for x in x1]
         x3 = [x + b_width for x in x2]
+        #x4 = [x + b_width for x in x3]
         # teachers hist 
         tchr_ax.bar(x1, accuracies, width = b_width, color=colors[0], label="accuracy")
         tchr_ax.bar(x2, eod, width = b_width, color=[colors[1] for _ in eod],label="EOD")
         tchr_ax.bar(x3, spd, width = b_width, color=[colors[2] for _ in spd], label="SPD")
+        #tchr_ax.bar(x4, di, width = b_width, color=[colors[3] for _ in spd], label="DI")
         tchr_ax.set_xticks([x + b_width/4 for x in x2], [t+1 for t in range(nb_teachers)])
         tchr_ax.set_yticks(np.arange(0, 1.1, step=0.1))
         tchr_ax.set_ylim([0,1.1])
@@ -96,6 +98,7 @@ while True:
             st_ax.bar([1], [st_stats["ACC"]], width=b_width, color=colors[0], label="accuracy")
             st_ax.bar([1+b_width], [st_stats["EOD"]], width=b_width, color=colors[1], label="EOD")
             st_ax.bar([1+2*b_width], [st_stats["SPD"]], width=b_width, color=colors[2], label="SPD")
+            st_ax.bar([1 + 3*b_width], [st_stats["DI"]], width = b_width, color=colors[3], label="DI")
             st_ax.set_xticks([1], ["student"])
             st_ax.set_yticks(np.arange(0, 1.1, step=0.1))
             st_ax.set_ylim([0,1.1])

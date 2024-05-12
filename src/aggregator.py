@@ -98,7 +98,7 @@ def update_aggregator(current):
         else:
             methode = plurality
            
-        print(f"\rCurrent methode is {methode}")
+        print(f"Only Fair teachers participates using {methode.__name__}")
         return only_fair
     else:
         return current
