@@ -30,7 +30,7 @@ def laplacian_noisy_vote(data_to_label, gamma=0.1, voters=[]):
         labels.append(np.argmax(n_y_x))
     return labels
 
-def gaussian_noisy_vote(data_to_label, mu=0, sigma=40, voters=[]):
+def gaussian_noisy_vote(data_to_label, mu=0, sigma=1, voters=[]):
     # predictions from teachers
     if voters == []:
         voters = teachers.copy()

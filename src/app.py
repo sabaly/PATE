@@ -49,17 +49,21 @@ if student == None:
     # fake student train data
     x_test = None
     y_test = None
+    s_test = None
     for subset in subsets:
         if x_test is None:
             x_test = subset[1]
             y_test = subset[3]
+            s_test = subset[5]
         else:
             x_test = np.concatenate((x_test, subset[1]))
             y_test = np.concatenate((y_test, subset[3]))
+            s_test = np.concatenate((s_test, subset[5]))
     train_size = int(0.8*len(x_test))
     x_train = x_test[:train_size]
     x_test = x_test[train_size:]
     y_test = y_test[train_size:]
+    s_test = s_test[train_size:]
 else:
     # load student dataset
     (x_train, x_test, y_train, y_test, s_train, s_test) = load_student_data(student)
