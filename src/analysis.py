@@ -1,14 +1,10 @@
 import numpy as np
 
 def fairness(model, x_test, y_test, group_test):
-    # Computes the disparte impact 
-    p_grp = np.mean(y_test[group_test==1])
-    up_grp = np.mean(y_test[group_test==2])
-    di = float(format(up_grp/p_grp, ".4f"))
-
     yhat = np.round(model.predict(x_test))
-    acc = float(format(model.evaluate(x_test, y_test)[1], "0.4f"))
-    #acc = float(format(np.mean(yhat[(y_test == 1)]), "0.4f"))
+    ev = model.evaluate(x_test, y_test)
+    acc = float(format(ev[1], "0.4f"))
+    rec = float(format(ev[2], ".4f"))
 
     p_grp_tpr = np.mean(yhat[(y_test == 1) & (group_test == 1)])
     up_grp_tpr = np.mean(yhat[(y_test == 1) & (group_test == 2)])
@@ -20,7 +16,7 @@ def fairness(model, x_test, y_test, group_test):
     up_grp = np.mean(yhat[(group_test == 2)])
     spd = float(format(abs(p_grp - up_grp), ".4f"))
 
-    return {"EOD": eod, "SPD": spd, "ACC": acc, "DI": di}
+    return {"EOD": eod, "SPD": spd, "ACC": acc, "REC": rec}
 
 def stats(nb_teachers, teachers, subsets):
     accuracies = []

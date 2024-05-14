@@ -109,7 +109,7 @@ while True:
             st_ax.bar([1], [st_stats["ACC"]], width=b_width, color=colors[0], label="accuracy")
             st_ax.bar([1+b_width], [st_stats["EOD"]], width=b_width, color=colors[1], label="EOD")
             st_ax.bar([1+2*b_width], [st_stats["SPD"]], width=b_width, color=colors[2], label="SPD")
-            st_ax.bar([1 + 3*b_width], [st_stats["DI"]], width = b_width, color=colors[3], label="DI")
+            st_ax.bar([1 + 3*b_width], [st_stats["REC"]], width = b_width, color=colors[3], label="Recall")
             st_ax.set_xticks([1], ["student"])
             st_ax.set_yticks(np.arange(0, 1.1, step=0.1))
             st_ax.set_ylim([0,1.1])
