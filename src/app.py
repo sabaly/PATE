@@ -67,11 +67,11 @@ if student == None:
 else:
     # load student dataset
     (x_train, x_test, y_train, y_test, s_train, s_test) = load_student_data(student)
-# define aggregation methode
-aggregator = gaussian_noisy_vote
+# default aggregation methode
+aggregator = plurality
 student_trained = False
 while True:
-    action = int(input("1. Update aggregator \t 2. Train student \t 3. Stats\n(0 exit)>> "))
+    action = int(input("1. Update aggregator \t 2. Train student \t3. Set number fair Teachers\n 4. Stats\n(0 exit)>> "))
     if action == 1:
         aggregator = update_aggregator(aggregator)
     elif action==2:
@@ -80,6 +80,13 @@ while True:
         st_stats = fairness(st_model, x_test, y_pred, s_test)
         student_trained = True
     elif action==3:
+        nb_fair_tchrs = int(input("Enter number of fair teachers >>> "))
+        subsets, student = get(dataset, nb_teachers=nb_fair_tchrs, nb_fair_tchrs=nb_fair_tchrs)
+        up_tchrs = train_teachers(subsets, nb_fair_tchrs)
+        for i in range(nb_fair_tchrs):
+            teachers[i] = up_tchrs[i]
+        init_teachers(teachers)
+    elif action==4:
         fig, (tchr_ax, st_ax)= plt.subplots(2, 1, sharey=True)
         b_width = 0.3
         x1 = range(len(accuracies))
