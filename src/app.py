@@ -93,6 +93,8 @@ while True:
         subsets, student = get(dataset, nb_teachers=nb_teachers, nb_fair_tchrs=nb_fair_tchrs)
         teachers = train_teachers(subsets, nb_teachers)
         update_teachers(teachers)
+        accuracies, eod, spd, di = stats(nb_teachers, teachers, subsets)
+        set_metrics(eod)
     elif action==4:
         fig, (tchr_ax, st_ax)= plt.subplots(2, 1, sharey=True)
         b_width = 0.3
