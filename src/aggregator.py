@@ -1,7 +1,7 @@
 import numpy as np
 
 teachers = []
-def init_teachers(tchrs):
+def update_teachers(tchrs):
     global teachers
     teachers = tchrs
 
@@ -15,7 +15,7 @@ def laplacian_noisy_vote(data_to_label, gamma=0.1, voters=[]):
     if voters == []:
         voters = teachers.copy()
     preds = []
-    for tchr in teachers:
+    for tchr in voters:
         pred = tchr.predict(data_to_label)
         pred = np.round(pred)
         preds.append([p[0] for p in pred])
@@ -55,7 +55,7 @@ def plurality(data_to_label, voters=[]):
     if voters == []:
         voters = teachers.copy()
     preds = []
-    for tchr in teachers:
+    for tchr in voters:
         pred = tchr.predict(data_to_label)
         pred = np.round(pred)
         preds.append([p[0] for p in pred])
@@ -72,16 +72,24 @@ def only_fair(data_to_label):
     global teachers
     to_ban = []
     for i in range(len(teachers)):
-        if fairness_metrics[i] > 0.05:
+        if fairness_metrics[i] >= 0.15:
+            to_ban.append(teachers[i])
+    voters = list(set(teachers) - set(to_ban))
+    return methode(data_to_label, voters=voters)
+
+def only_unfair(data_to_label):
+    global teachers
+    to_ban = []
+    for i in range(len(teachers)):
+        if fairness_metrics[i] < 0.15:
             to_ban.append(teachers[i])
     voters = list(set(teachers) - set(to_ban))
     return methode(data_to_label, voters=voters)
 
 
 
-
 def update_aggregator(current):
-    choice = input("1. Plurality \t 2. LNMax\t 3. GNMax \t 4. Only Fair\n (0 to exit)>>> ")
+    choice = input("1. Plurality \t 2. LNMax\t 3. GNMax \n4. Only Fair \t 5. Only unfair\n (0 to exit)>>> ")
     if choice == "1":
         return plurality
     elif choice == "2":
@@ -89,16 +97,28 @@ def update_aggregator(current):
     elif choice == "3":
         return gaussian_noisy_vote
     elif choice == "4":
-        global methode
+        """ global methode
         choice = input("Methode : 1. Plurality \t 2. LNMax\t 3. GNMax\n>>> ")
         if choice == "3":
             methode = gaussian_noisy_vote
         elif choice == "2":
             methode = laplacian_noisy_vote
         else:
-            methode = plurality
+            methode = plurality """
            
         print(f"Only Fair teachers participates using {methode.__name__}")
         return only_fair
+    elif choice == "5":
+        """ global methode
+        choice = input("Methode : 1. Plurality \t 2. LNMax\t 3. GNMax\n>>> ")
+        if choice == "3":
+            methode = gaussian_noisy_vote
+        elif choice == "2":
+            methode = laplacian_noisy_vote
+        else:
+            methode = plurality """
+           
+        print(f"Only Fair teachers participates using {methode.__name__}") 
+        return only_unfair
     else:
         return current

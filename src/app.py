@@ -39,7 +39,7 @@ subsets, student = get(dataset, nb_teachers)
 
 # train teachers
 teachers = train_teachers(subsets, nb_teachers)
-init_teachers(teachers)
+update_teachers(teachers)
 
 accuracies, eod, spd, di = stats(nb_teachers, teachers, subsets)
 set_metrics(eod)
@@ -70,8 +70,17 @@ else:
 # default aggregation methode
 aggregator = plurality
 student_trained = False
+
+menu = """
+    1. Update aggregator \t 2. Train student \t3. Set number fair Teachers\n
+    4. Stats \t 5. Update unb_alpha \t 6. Update b_alpha\n
+"""
 while True:
-    action = int(input("1. Update aggregator \t 2. Train student \t3. Set number fair Teachers\n 4. Stats\n(0 exit)>> "))
+    action = input(menu + "(0 exit)>> ")
+    try:
+        action = int(action)
+    except:
+        continue
     if action == 1:
         aggregator = update_aggregator(aggregator)
     elif action==2:
@@ -81,11 +90,9 @@ while True:
         student_trained = True
     elif action==3:
         nb_fair_tchrs = int(input("Enter number of fair teachers >>> "))
-        subsets, student = get(dataset, nb_teachers=nb_fair_tchrs, nb_fair_tchrs=nb_fair_tchrs)
-        up_tchrs = train_teachers(subsets, nb_fair_tchrs)
-        for i in range(nb_fair_tchrs):
-            teachers[i] = up_tchrs[i]
-        init_teachers(teachers)
+        subsets, student = get(dataset, nb_teachers=nb_teachers, nb_fair_tchrs=nb_fair_tchrs)
+        teachers = train_teachers(subsets, nb_teachers)
+        update_teachers(teachers)
     elif action==4:
         fig, (tchr_ax, st_ax)= plt.subplots(2, 1, sharey=True)
         b_width = 0.3
@@ -98,7 +105,9 @@ while True:
         tchr_ax.bar(x2, eod, width = b_width, color=[colors[1] for _ in eod],label="EOD")
         tchr_ax.bar(x3, spd, width = b_width, color=[colors[2] for _ in spd], label="SPD")
         #tchr_ax.bar(x4, di, width = b_width, color=[colors[3] for _ in spd], label="DI")
-        tchr_ax.set_xticks([x + b_width/4 for x in x2], [t+1 for t in range(nb_teachers)])
+        cp_state = states.copy()
+        cp_state.pop(2)
+        tchr_ax.set_xticks([x + b_width/4 for x in x2], [cp_state[t] for t in range(nb_teachers)])
         tchr_ax.set_yticks(np.arange(0, 1.1, step=0.1))
         tchr_ax.set_ylim([0,1.1])
         tchr_ax.set_xlabel("Teachers")
@@ -117,5 +126,12 @@ while True:
             st_ax.set_ylabel("Metrics")
         plt.legend()
         plt.show()
-    else:
+    elif action in [5,6]:
+        a, b = input("Give alpha >>> ").split(",")
+        alpha = [int(a), int(b)]
+        if action == 5:
+            update_alpha(alpha, True)
+        else:
+            update_alpha(alpha)
+    elif action==0:
         exit(0)
