@@ -132,8 +132,8 @@ while True:
         a, b = input("Give alpha >>> ").split(",")
         alpha = [int(a), int(b)]
         if action == 5:
-            update_alpha(alpha, True)
-        else:
             update_alpha(alpha)
+        else:
+            update_alpha(alpha, True)
     elif action==0:
         exit(0)
