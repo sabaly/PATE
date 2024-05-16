@@ -63,7 +63,7 @@ for cf in confs:
     if cf == "All":
         aggregator = plurality
     elif cf == "Only fair":
-        aggregato = only_fair
+        aggregator = only_fair
     else:
         aggregator = only_unfair
     
