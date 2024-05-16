@@ -118,7 +118,7 @@ def update_aggregator(current):
         else:
             methode = plurality """
            
-        print(f"Only Fair teachers participates using {methode.__name__}") 
+        print(f"Only unfair teachers participates using {methode.__name__}") 
         return only_unfair
     else:
         return current

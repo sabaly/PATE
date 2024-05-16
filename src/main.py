@@ -18,8 +18,8 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     fxn()
 
-dataset = "acsemployment"
-nb_teahcers = 30
+dataset = "acsemployment_bis"
+nb_teachers = 30
 st_train_times = 100
 
 # prepare datasets !
@@ -39,7 +39,7 @@ set_metrics(eod)
 
 confs = ["All", "Only fair", "Only unfair"]
 
-for cf in conf:
+for cf in confs:
     print(f'Training  {cf} teachers')
     # setting conf
     if cf == "All":
@@ -56,10 +56,10 @@ for cf in conf:
         st_stats = fairness(st_model, x_test, y_pred, s_test)
         y_axis.append(st_stats["EOD"])
     plt.plot(list(range(st_train_times)), y_axis, colors[color_index], label=cf)
-
+    color_index += 1
 plt.title("Title - ")
 plt.legend()
-plt.savefig("img/saved.png")
+plt.savefig("../img/saved.png")
 
 
 

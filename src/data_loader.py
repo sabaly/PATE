@@ -70,6 +70,23 @@ def load_ACSEmployment(year=2018, horizon="1-Year", states=states, nb_fair_tchrs
         acs_data = data_src.get_data(states=[st], download=True)
         features, labels, group = ACSEmployment.df_to_numpy(acs_data)
 
+        x_train, x_test, y_train, y_test, s_train, s_test = train_test_split(
+            features, labels, group, test_size=0.2, random_state=0
+        )
+        subsets.append((x_train, x_test, y_train, y_test, s_train, s_test))
+    return subsets
+
+    
+def load_ACSEmployment_bis(year=2018, horizon="1-Year", states=states, nb_fair_tchrs=0):
+    data_src = ACSDataSource(survey_year=year, horizon=horizon, survey="person")
+    subsets = []
+    if len(states) > 2:
+        states.pop(2) # delete student
+    fair = 0
+    for st in states:
+        acs_data = data_src.get_data(states=[st], download=True)
+        features, labels, group = ACSEmployment.df_to_numpy(acs_data)
+
         df = pd.DataFrame(features)
         df.columns = ACSEmployment.features
         df[ACSEmployment.target] = labels
@@ -126,6 +143,8 @@ def get(dataset_name, nb_teachers=49, nb_fair_tchrs=0):
         return x_train, x_test, y_train, y_test
     elif dataset_name == "acsemployment":
         return load_ACSEmployment(states=states[:nb_teachers+1], nb_fair_tchrs=nb_fair_tchrs), states[2]
+    elif dataset_name == "acsemployment_bis":
+        return load_ACSEmployment_bis(states=states[:nb_teachers+1], nb_fair_tchrs=nb_fair_tchrs), states[2]
     else:
         return None
 
