@@ -18,7 +18,7 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     fxn()
 
-dataset = "acsemployment_bis"
+dataset = "acsemployment"
 nb_teachers = 30
 st_train_times = 100
 
@@ -56,7 +56,8 @@ for cf in confs:
         st_stats = fairness(st_model, x_test, y_pred, s_test)
         y_axis.append(st_stats["EOD"])
     plt.plot(list(range(st_train_times)), y_axis, colors[color_index], label=cf)
-    color_index += 1
+    color_index = color_index + 1
+
 plt.title("Title - ")
 plt.legend()
 plt.savefig("../img/saved.png")
