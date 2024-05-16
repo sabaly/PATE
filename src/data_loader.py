@@ -62,7 +62,6 @@ def load_ACSEmployment(year=2018, horizon="1-Year", states=states, nb_fair_tchrs
     subsets = []
     if len(states) > 2:
         states.pop(2) # delete student
-    fair = 0
     for st in states:
         acs_data = data_src.get_data(states=[st], download=True)
         features, labels, group = ACSEmployment.df_to_numpy(acs_data)
@@ -79,7 +78,6 @@ def load_ACSEmployment_bis(year=2018, horizon="1-Year", states=states, nb_fair_t
     subsets = []
     if len(states) > 2:
         states.pop(2) # delete student
-    fair = 0
     for st in states:
         acs_data = data_src.get_data(states=[st], download=True)
         features, labels, group = ACSEmployment.df_to_numpy(acs_data)

@@ -21,7 +21,7 @@ with warnings.catch_warnings():
 
 # define initial parameters  
 # teachers dataset, nombers of teachers
-list_dataset = {"adult", "acsemployment"}
+list_dataset = ["adult", "acsemployment", "acsemployment_bis"]
 if len(sys.argv) < 3:
     print("Usage : app.py <dataset_name> <number of teachers>")
     dataset = "adult"

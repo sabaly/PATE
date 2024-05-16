@@ -18,6 +18,8 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     fxn()
 
+alpha = [150, 100]
+update_alpha(alpha)
 dataset = "acsemployment_bis"
 nb_teachers = 30
 st_train_times = 50
@@ -48,7 +50,7 @@ fig, (ax1, ax2)= plt.subplots(1, 2, sharey=True)
 b_width = 0.3
 x = range(len(accuracies))
 # teachers hist 
-ax1.bar(x, eod, width = b_width, color=[colors[1] for _ in eod],label="EOD")
+ax1.bar(x, eod, width = b_width, color=[colors[3] for _ in eod],label="EOD")
 cp_state = states.copy()
 cp_state.pop(2)
 ax1.set_xticks(x, ['' for _ in range(nb_teachers)])
@@ -63,7 +65,7 @@ for cf in confs:
     if cf == "All":
         aggregator = plurality
     elif cf == "Only fair":
-        aggregato = only_fair
+        aggregator = only_fair
     else:
         aggregator = only_unfair
     
