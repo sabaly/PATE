@@ -20,7 +20,7 @@ with warnings.catch_warnings():
 
 dataset = "acsemployment"
 nb_teachers = 30
-st_train_times = 100
+st_train_times = 50
 
 # prepare datasets !
 subsets, student = get(dataset, nb_teachers)
@@ -52,7 +52,7 @@ for cf in confs:
     y_axis = []
     for _ in range(st_train_times):
         st_model = train_student(x_train, aggregator)
-        y_pred = eval_student_model(st_model, x_test, y_test, aggregator)
+        y_pred = eval_student_model(st_model, x_test, y_test, aggregator, verbose=False)
         st_stats = fairness(st_model, x_test, y_pred, s_test)
         y_axis.append(st_stats["EOD"])
     plt.plot(list(range(st_train_times)), y_axis, colors[color_index], label=cf)
