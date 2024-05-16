@@ -19,7 +19,7 @@ with warnings.catch_warnings():
     fxn()
 
 dataset = "acsemployment"
-nb_teahcers = 30
+nb_teachers = 30
 st_train_times = 100
 
 # prepare datasets !
@@ -56,6 +56,7 @@ for cf in conf:
         st_stats = fairness(st_model, x_test, y_pred, s_test)
         y_axis.append(st_stats["EOD"])
     plt.plot(list(range(st_train_times)), y_axis, colors[color_index], label=cf)
+    color_index = color_index + 1
 
 plt.title("Title - ")
 plt.legend()
