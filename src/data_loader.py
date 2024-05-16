@@ -51,7 +51,7 @@ states = ["HI", "CA", "AK", "PR", "NV", "NM", "OK", "NY", "WA", "AZ",  "MD",
 "FL", "MS", "SC", "AR", "SD", "AL", "MI", "KS", "ID", "MN", "MT", "OH", "IN",
 "TN", "PA", "NE", "MO", "WY", "ND", "WI", "KY", "NH", "ME", "IA", "VT", "WV"] # "NJ"
 
-alpha = [100,100]
+alpha = [150,100]
 def update_alpha(new_alpha):
     global alpha
     alpha = new_alpha
