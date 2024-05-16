@@ -18,9 +18,14 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     fxn()
 
-dataset = "acsemployment"
+dataset = "acsemployment_bis"
 nb_teachers = 30
 st_train_times = 50
+
+if "_bis" in dataset:
+    name = dataset + "_" + str(alpha[0]) + "_" + str(alpha[1]) + ".png"
+else:
+    name = dataset + ".png"
 
 # prepare datasets !
 subsets, student = get(dataset, nb_teachers)
@@ -39,6 +44,19 @@ set_metrics(eod)
 
 confs = ["All", "Only fair", "Only unfair"]
 
+fig, (ax1, ax2)= plt.subplots(1, 2, sharey=True)
+b_width = 0.3
+x = range(len(accuracies))
+# teachers hist 
+ax1.bar(x, eod, width = b_width, color=[colors[1] for _ in eod],label="EOD")
+cp_state = states.copy()
+cp_state.pop(2)
+ax1.set_xticks(x, ['' for _ in range(nb_teachers)])
+ax1.set_yticks(np.arange(0, 1.1, step=0.1))
+ax1.set_ylim([0,1.1])
+ax1.set_xlabel("Teachers")
+ax1.set_ylabel("Metrics")
+
 for cf in confs:
     print(f'Training  {cf} teachers')
     # setting conf
@@ -55,12 +73,12 @@ for cf in confs:
         y_pred = eval_student_model(st_model, x_test, y_test, aggregator, verbose=False)
         st_stats = fairness(st_model, x_test, y_pred, s_test)
         y_axis.append(st_stats["EOD"])
-    plt.plot(list(range(st_train_times)), y_axis, colors[color_index], label=cf)
+    ax2.plot(list(range(st_train_times)), y_axis, colors[color_index], label=cf)
     color_index = color_index + 1
 
-plt.title("Title - ")
+plt.title(f"PATE impacts on fairness")
 plt.legend()
-plt.savefig("../img/saved.png")
+plt.savefig("../img/"+name)
 
 
 

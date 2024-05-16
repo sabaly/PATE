@@ -50,16 +50,13 @@ states = ["HI", "CA", "AK", "PR", "NV", "NM", "OK", "NY", "WA", "AZ",  "MD",
 "TX", "VA", "MA", "GA", "CT", "OR", "IL", "RI", "NC", "CO", "DE", "LA", "UT",
 "FL", "MS", "SC", "AR", "SD", "AL", "MI", "KS", "ID", "MN", "MT", "OH", "IN",
 "TN", "PA", "NE", "MO", "WY", "ND", "WI", "KY", "NH", "ME", "IA", "VT", "WV"] # "NJ"
-unb_alpha = [100,100]
-b_alpha = [15,12]
-def update_alpha(alpha, b=False):
-    if b:
-        global b_alpha
-        b_alpha = alpha
-    else:
-        global unb_alpha
-        unb_alpha = alpha
-    
+
+alpha = [100,100]
+def update_alpha(new_alpha):
+    global alpha
+    alpha = new_alpha
+
+
 def load_ACSEmployment(year=2018, horizon="1-Year", states=states, nb_fair_tchrs=0):
     data_src = ACSDataSource(survey_year=year, horizon=horizon, survey="person")
     subsets = []
@@ -94,11 +91,6 @@ def load_ACSEmployment_bis(year=2018, horizon="1-Year", states=states, nb_fair_t
         p_grp_pr = df[(df["RAC1P"] == 1) & (df["ESR"] == True)]
         up_grp_pr = df[(df["RAC1P"] == 2) & (df["ESR"] == True)]
         rest_of_df = df[((df["RAC1P"] != 1) & (df["RAC1P"] != 2)) | (df["ESR"] == False)]
-        if fair < nb_fair_tchrs:
-            alpha = b_alpha
-            fair += 1
-        else:
-            alpha = unb_alpha
         p_vs_up = pd.concat([p_grp_pr, up_grp_pr])
         dist = np.random.dirichlet(alpha, 1)
         size_p_grp = int(dist[0][0]*p_vs_up.shape[0])
