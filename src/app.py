@@ -41,7 +41,7 @@ subsets, student = get(dataset, nb_teachers)
 teachers = parallel_training_teachers(subsets)
 update_teachers(teachers)
 
-accuracies, eod, spd, di = stats(nb_teachers, teachers, subsets)
+accuracies, eod, spd, rec = stats(nb_teachers, teachers, subsets)
 set_metrics(eod)
 
 # statudent dataset
@@ -84,8 +84,10 @@ while True:
     if action == 1:
         aggregator = update_aggregator(aggregator)
     elif action==2:
-        st_model = train_student(x_train, aggregator)
-        y_pred = eval_student_model(st_model, x_test, y_test, aggregator)
+        y_train = np.asarray(aggregator(x_train))
+        st_model = train_student(x_train, y_train)
+        yhat_test = np.asarray(aggregator(x_test))
+        y_pred = eval_student_model(st_model, x_test, y_test, yhat_test)
         st_stats = fairness(st_model, x_test, y_pred, s_test)
         student_trained = True
     elif action==3:
@@ -104,8 +106,8 @@ while True:
         #x4 = [x + b_width for x in x3]
         # teachers hist 
         tchr_ax.bar(x1, accuracies, width = b_width, color=colors[0], label="accuracy")
-        tchr_ax.bar(x2, eod, width = b_width, color=[colors[1] for _ in eod],label="EOD")
-        tchr_ax.bar(x3, spd, width = b_width, color=[colors[2] for _ in spd], label="SPD")
+        tchr_ax.bar(x2, rec, width = b_width, color=[colors[1] for _ in eod],label="REC")
+        tchr_ax.bar(x3, eod, width = b_width, color=[colors[2] for _ in spd], label="EOD")
         #tchr_ax.bar(x4, di, width = b_width, color=[colors[3] for _ in spd], label="DI")
         cp_state = states.copy()
         cp_state.pop(2)
@@ -118,9 +120,9 @@ while True:
         # student hist
         if student_trained:
             st_ax.bar([1], [st_stats["ACC"]], width=b_width, color=colors[0], label="accuracy")
-            st_ax.bar([1+b_width], [st_stats["EOD"]], width=b_width, color=colors[1], label="EOD")
-            st_ax.bar([1+2*b_width], [st_stats["SPD"]], width=b_width, color=colors[2], label="SPD")
-            st_ax.bar([1 + 3*b_width], [st_stats["REC"]], width = b_width, color=colors[3], label="Recall")
+            st_ax.bar([1+b_width], [st_stats["REC"]], width=b_width, color=colors[1], label="Recall")
+            #st_ax.bar([1+2*b_width], [st_stats["SPD"]], width=b_width, color=colors[2], label="SPD")
+            st_ax.bar([1 + 2*b_width], [st_stats["EOD"]], width = b_width, color=colors[3], label="EOD")
             st_ax.set_xticks([1], ["student"])
             st_ax.set_yticks(np.arange(0, 1.1, step=0.1))
             st_ax.set_ylim([0,1.1])

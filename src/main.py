@@ -18,17 +18,12 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     fxn()
 
-alpha = [150, 50]
+alpha = [100, 100]
 update_alpha(alpha)
 dataset = "acsemployment_bis"
 nb_teachers = 30
 st_train_times = 50
-nb_fair_tchrs = 0
-
-if "_bis" in dataset:
-    name = dataset + "_" + str(nb_fair_tchrs) + "_fair"+ ".png"
-else:
-    name = dataset + ".png"
+nb_fair_tchrs = 10 # wished
 
 # prepare datasets !
 subsets, student = get(dataset, nb_teachers, nb_fair_tchrs=nb_fair_tchrs)
@@ -40,6 +35,12 @@ update_teachers(teachers)
 accuracies, eod, spd, di = stats(nb_teachers, teachers, subsets)
 set_metrics(eod)
 
+nb_fair = [x < 0.1 for x in eod].count(True)
+
+if "_bis" in dataset:
+    name = dataset + "_" + str(nb_fair) + "_fair"+ ".png"
+else:
+    name = dataset + ".png"
 
 # load student dataset
 (x_train, x_test, y_train, y_test, s_train, s_test) = load_student_data(student)
@@ -66,14 +67,19 @@ for cf in confs:
     if cf == "All":
         aggregator = plurality
     elif cf == "Only fair":
+        if nb_fair == 0:
+            continue
         aggregator = only_fair
     else:
+        if nb_fair == nb_teachers:
+            continue
         aggregator = only_unfair
-    
+    y_train = np.asarray(aggregator(x_train))
+    yhat_test = np.asarray(aggregator(x_test))
     y_axis = []
     for _ in range(st_train_times):
-        st_model = train_student(x_train, aggregator)
-        y_pred = eval_student_model(st_model, x_test, y_test, aggregator, verbose=False)
+        st_model = train_student(x_train, y_train, verbose=False)
+        y_pred = eval_student_model(st_model, x_test, y_test, yhat_test, verbose=False)
         st_stats = fairness(st_model, x_test, y_pred, s_test)
         y_axis.append(st_stats["EOD"])
     ax2.plot(list(range(st_train_times)), y_axis, colors[color_index], label=cf)

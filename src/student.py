@@ -24,17 +24,19 @@ def define_model(input_shape):
     
     return model
 
-def train_student(x_train, labelizer, nb_epochs=20):
-    y_train = np.asarray(labelizer(x_train))
+def train_student(x_train, y_train, nb_epochs=20, verbose=True):
+    #y_train = np.asarray(labelizer(x_train))
 
     model = define_model(x_train.shape[1:])
-    print("Training student...", end="")
+    if verbose:
+        print("Training student...", end="")
     model.fit(x_train, y_train, epochs = nb_epochs, verbose=False)
-    print("Done")
+    if verbose:
+        print("Done")
     return model
 
-def eval_student_model(model, x_test, true_y_test, labelizer, verbose=True):
-    y_test = np.asarray(labelizer(x_test))
+def eval_student_model(model, x_test, true_y_test, y_test, verbose=True):
+    #y_test = np.asarray(labelizer(x_test))
     if verbose:
         print('Test 1 : evaluation the student on aggregated labels')
     eval1 = model.evaluate(x_test, y_test)

@@ -5,7 +5,7 @@ from art.utils import load_mnist
 import numpy as np
 import pandas as pd
 from partition import *
-from random import randint
+from random import choice
 
 from folktables import ACSDataSource, ACSEmployment
 
@@ -79,14 +79,15 @@ def load_ACSEmployment_bis(year=2018, horizon="1-Year", states=states, nb_fair_t
     subsets = []
     if len(states) > 2:
         states.pop(2) # delete student
-    fair = 0
+    fair_st = []
+    for _ in range(nb_fair_tchrs):
+        fair_st.append(choice(states))
+
     for st in states:
         acs_data = data_src.get_data(states=[st], download=True)
         features, labels, group = ACSEmployment.df_to_numpy(acs_data)
 
-        if fair < nb_fair_tchrs:
-            fair += 1
-        else:
+        if st not in fair_st:
             df = pd.DataFrame(features)
             df.columns = ACSEmployment.features
             df[ACSEmployment.target] = labels
@@ -95,7 +96,7 @@ def load_ACSEmployment_bis(year=2018, horizon="1-Year", states=states, nb_fair_t
             up_grp_pr = df[(df["RAC1P"] == 2) & (df["ESR"] == True)]
             rest_of_df = df[((df["RAC1P"] != 1) & (df["RAC1P"] != 2)) | (df["ESR"] == False)]
             p_vs_up = pd.concat([p_grp_pr, up_grp_pr])
-            alpha = uf_alphas[states.index(st)]
+            #alpha = uf_alphas[states.index(st)]
             dist = np.random.dirichlet(alpha, 1)
             size_p_grp = int(dist[0][0]*p_vs_up.shape[0])
             size_up_grp = p_vs_up.shape[0]-size_p_grp
