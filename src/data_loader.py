@@ -80,8 +80,11 @@ def load_ACSEmployment_bis(year=2018, horizon="1-Year", states=states, nb_fair_t
     if len(states) > 2:
         states.pop(2) # delete student
     fair_st = []
-    for _ in range(nb_fair_tchrs):
-        fair_st.append(choice(states))
+    if nb_fair_tchrs < len(states):
+        for _ in range(nb_fair_tchrs):
+            fair_st.append(choice(states))
+    else:
+        fair_st = states.copy()
 
     for st in states:
         acs_data = data_src.get_data(states=[st], download=True)

@@ -41,6 +41,7 @@ if "_bis" in dataset:
     name = dataset + "_" + str(nb_fair) + "_fair"+ ".png"
 else:
     name = dataset + ".png"
+    nb_fair = 0
 
 # load student dataset
 (x_train, x_test, y_train, y_test, s_train, s_test) = load_student_data(student)
@@ -64,11 +65,11 @@ ax1.set_ylabel("Metrics")
 for cf in confs:
     print(f'Training  {cf} teachers')
     # setting conf
+    if cf != "All" and (nb_fair == 0 or nb_fair == nb_teachers):
+        break
     if cf == "All":
         aggregator = plurality
     elif cf == "Only fair":
-        if nb_fair == 0:
-            continue
         aggregator = only_fair
     else:
         if nb_fair == nb_teachers:
