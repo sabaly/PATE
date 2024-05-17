@@ -18,7 +18,7 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     fxn()
 
-alpha = [150, 100]
+alpha = [150, 50]
 update_alpha(alpha)
 dataset = "acsemployment_bis"
 nb_teachers = 30
