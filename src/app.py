@@ -38,7 +38,7 @@ else:
 subsets, student = get(dataset, nb_teachers)
 
 # train teachers
-teachers = train_teachers(subsets, nb_teachers)
+teachers = parallel_training_teachers(subsets)
 update_teachers(teachers)
 
 accuracies, eod, spd, di = stats(nb_teachers, teachers, subsets)

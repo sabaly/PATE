@@ -23,17 +23,18 @@ update_alpha(alpha)
 dataset = "acsemployment_bis"
 nb_teachers = 30
 st_train_times = 50
+nb_fair_tchrs = 0
 
 if "_bis" in dataset:
-    name = dataset + "_" + str(alpha[0]) + "_" + str(alpha[1]) + ".png"
+    name = dataset + "_" + str(nb_fair_tchrs) + "_fair"+ ".png"
 else:
     name = dataset + ".png"
 
 # prepare datasets !
-subsets, student = get(dataset, nb_teachers)
+subsets, student = get(dataset, nb_teachers, nb_fair_tchrs=nb_fair_tchrs)
 
 # train teachers
-teachers = train_teachers(subsets, nb_teachers)
+teachers = parallel_training_teachers(subsets)
 update_teachers(teachers)
 
 accuracies, eod, spd, di = stats(nb_teachers, teachers, subsets)

@@ -72,7 +72,7 @@ def only_fair(data_to_label):
     global teachers
     to_ban = []
     for i in range(len(teachers)):
-        if fairness_metrics[i] >= 0.15:
+        if fairness_metrics[i] >= 0.1:
             to_ban.append(teachers[i])
     voters = list(set(teachers) - set(to_ban))
     return methode(data_to_label, voters=voters)
@@ -81,7 +81,7 @@ def only_unfair(data_to_label):
     global teachers
     to_ban = []
     for i in range(len(teachers)):
-        if fairness_metrics[i] < 0.15:
+        if fairness_metrics[i] < 0.1:
             to_ban.append(teachers[i])
     voters = list(set(teachers) - set(to_ban))
     return methode(data_to_label, voters=voters)

@@ -52,8 +52,7 @@ states = ["HI", "CA", "AK", "PR", "NV", "NM", "OK", "NY", "WA", "AZ",  "MD",
 "TN", "PA", "NE", "MO", "WY", "ND", "WI", "KY", "NH", "ME", "IA", "VT", "WV"] # "NJ"
 
 alpha = [150,100]
-alphas = [[150, 70], [150, 50], [150, 50], [150, 50], [200, 100], [150, 50], [150, 50], [200, 50], [150, 50], [150, 50], [150, 70], [150, 50], [200, 50], [150, 50], [150, 70], [200, 10], [150, 70], [150, 50], [150, 50], [200, 50], [150, 50], [150, 50], [200, 10], [150, 50], [150, 50], [150, 50], [150, 50], None, [150, 50], [150, 50]]
-
+uf_alphas = [[20, 50], [50, 100], [300, 5], [50, 100], [50, 100], [50, 100], [350, 10], [50, 100], [20, 50], [200, 10], [50, 100], [250, 1], [50, 100], [250, 20], [250, 1], [50, 100], [300, 5], [50, 100], [300, 5], [20, 50], [20, 50], [250, 20], [50, 100], [50, 100], [250, 20], [200, 10], [50, 100], [20, 50], [250, 20], [20, 50]]
 def update_alpha(new_alpha):
     global alpha
     alpha = new_alpha
@@ -80,29 +79,35 @@ def load_ACSEmployment_bis(year=2018, horizon="1-Year", states=states, nb_fair_t
     subsets = []
     if len(states) > 2:
         states.pop(2) # delete student
+    fair = 0
     for st in states:
         acs_data = data_src.get_data(states=[st], download=True)
         features, labels, group = ACSEmployment.df_to_numpy(acs_data)
 
-        df = pd.DataFrame(features)
-        df.columns = ACSEmployment.features
-        df[ACSEmployment.target] = labels
+        if fair < nb_fair_tchrs:
+            fair += 1
+        else:
+            df = pd.DataFrame(features)
+            df.columns = ACSEmployment.features
+            df[ACSEmployment.target] = labels
 
-        p_grp_pr = df[(df["RAC1P"] == 1) & (df["ESR"] == True)]
-        up_grp_pr = df[(df["RAC1P"] == 2) & (df["ESR"] == True)]
-        rest_of_df = df[((df["RAC1P"] != 1) & (df["RAC1P"] != 2)) | (df["ESR"] == False)]
-        p_vs_up = pd.concat([p_grp_pr, up_grp_pr])
-        dist = np.random.dirichlet(alpha, 1)
-        size_p_grp = int(dist[0][0]*p_vs_up.shape[0])
-        size_up_grp = p_vs_up.shape[0]-size_p_grp
+            p_grp_pr = df[(df["RAC1P"] == 1) & (df["ESR"] == True)]
+            up_grp_pr = df[(df["RAC1P"] == 2) & (df["ESR"] == True)]
+            rest_of_df = df[((df["RAC1P"] != 1) & (df["RAC1P"] != 2)) | (df["ESR"] == False)]
+            p_vs_up = pd.concat([p_grp_pr, up_grp_pr])
+            alpha = uf_alphas[states.index(st)]
+            dist = np.random.dirichlet(alpha, 1)
+            size_p_grp = int(dist[0][0]*p_vs_up.shape[0])
+            size_up_grp = p_vs_up.shape[0]-size_p_grp
 
-        p_grp = p_grp_pr.sample(size_p_grp, replace=True)
-        up_grp = up_grp_pr.sample(size_up_grp, replace=True)
-        final_df = pd.concat([p_grp, up_grp, rest_of_df])
+            p_grp = p_grp_pr.sample(size_p_grp, replace=True)
+            up_grp = up_grp_pr.sample(size_up_grp, replace=True)
+            final_df = pd.concat([p_grp, up_grp, rest_of_df])
 
-        labels = np.array(final_df.pop("ESR"))
-        features = final_df.copy()
-        group = final_df["RAC1P"]
+            labels = np.array(final_df.pop("ESR"))
+            features = final_df.copy()
+            group = final_df["RAC1P"]
+
         x_train, x_test, y_train, y_test, s_train, s_test = train_test_split(
             features, labels, group, test_size=0.2, random_state=0
         )

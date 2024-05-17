@@ -6,13 +6,14 @@ from aggregator import *
 
 def define_model(input_shape):
     model = tf.keras.models.Sequential([
-        tf.keras.layers.Dense(16, input_shape=input_shape, activation="relu"),
-        tf.keras.layers.Dense(32, input_shape=input_shape, activation="relu"),
-        tf.keras.layers.Dense(64, input_shape=input_shape, activation="relu"),
-        tf.keras.layers.Dense(128,input_shape=input_shape, activation="relu"),
-        tf.keras.layers.Dense(64, input_shape=input_shape, activation="relu"),
-        tf.keras.layers.Dense(32, input_shape=input_shape, activation="relu"),
-        tf.keras.layers.Dense(16, input_shape=input_shape, activation="relu"),
+        tf.keras.Input(input_shape),
+        tf.keras.layers.Dense(16, activation="relu"),
+        tf.keras.layers.Dense(32, activation="relu"),
+        tf.keras.layers.Dense(64, activation="relu"),
+        tf.keras.layers.Dense(128, activation="relu"),
+        tf.keras.layers.Dense(64, activation="relu"),
+        tf.keras.layers.Dense(32, activation="relu"),
+        tf.keras.layers.Dense(16, activation="relu"),
         tf.keras.layers.Dropout(0.2),
         tf.keras.layers.Dense(1, activation='sigmoid')
     ])
