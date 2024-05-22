@@ -21,9 +21,9 @@ with warnings.catch_warnings():
 alpha = [100, 100]
 update_alpha(alpha)
 dataset = "acsemployment_bis"
-nb_teachers = 30
-st_train_times = 50
-nb_fair_tchrs = 10 # wished
+nb_teachers = 10
+st_train_times = 10
+nb_fair_tchrs = 1 # wished
 
 # prepare datasets !
 subsets, student = get(dataset, nb_teachers, nb_fair_tchrs=nb_fair_tchrs)
@@ -83,11 +83,13 @@ for cf in confs:
     y_train = np.asarray(aggregator(x_train))
     yhat_test = np.asarray(aggregator(x_test))
     y_axis = []
+    print("Training students ... ", end="")
     for _ in range(st_train_times):
-        st_model = train_student(x_train, y_train, verbose=False)
-        y_pred = eval_student_model(st_model, x_test, y_test, yhat_test, verbose=False)
-        st_stats = fairness(st_model, x_test, y_pred, s_test)
+        st_model = train_student(x_train, y_train, verbose=False, nb_epochs=200)
+        #eval_student_model(st_model, x_test, y_test, yhat_test, verbose=False)
+        st_stats = fairness(st_model, x_test, yhat_test, s_test)
         y_axis.append(st_stats["EOD"])
+    print("Done")
     ax2.plot(list(range(st_train_times)), y_axis, colors[color_index], label=cf)
     color_index = color_index + 1
 
@@ -95,11 +97,13 @@ aggregator = weighed_vote
 y_train = np.asarray(aggregator(x_train))
 yhat_test = np.asarray(aggregator(x_test))
 y_axis = []
+print("Training students ... ", end="")
 for _ in range(st_train_times):
-    st_model = train_student(x_train, y_train, verbose=False)
-    y_pred = eval_student_model(st_model, x_test, y_test, yhat_test, verbose=False)
-    st_stats = fairness(st_model, x_test, y_pred, s_test)
+    st_model = train_student(x_train, y_train, verbose=False, nb_epochs=200)
+    #y_pred = eval_student_model(st_model, x_test, y_test, yhat_test, verbose=False)
+    st_stats = fairness(st_model, x_test, yhat_test, s_test)
     y_axis.append(st_stats["EOD"])
+print("Done")
 ax2.plot(list(range(st_train_times)), y_axis, colors[color_index], label="weighed vote", linestyle="dashed")
 
 plt.title(f"PATE impacts on fairness")

@@ -14,7 +14,7 @@ def define_model(input_shape):
         tf.keras.layers.Dense(64, activation="relu"),
         tf.keras.layers.Dense(32, activation="relu"),
         tf.keras.layers.Dense(16, activation="relu"),
-        tf.keras.layers.Dropout(0.2),
+        #tf.keras.layers.Dropout(0.2),
         tf.keras.layers.Dense(1, activation='sigmoid')
     ])
 
@@ -24,9 +24,7 @@ def define_model(input_shape):
     
     return model
 
-def train_student(x_train, y_train, nb_epochs=20, verbose=True):
-    #y_train = np.asarray(labelizer(x_train))
-
+def train_student(x_train, y_train, nb_epochs=100, verbose=True):
     model = define_model(x_train.shape[1:])
     if verbose:
         print("Training student...", end="")
@@ -36,7 +34,6 @@ def train_student(x_train, y_train, nb_epochs=20, verbose=True):
     return model
 
 def eval_student_model(model, x_test, true_y_test, y_test, verbose=True):
-    #y_test = np.asarray(labelizer(x_test))
     if verbose:
         print('Test 1 : evaluation the student on aggregated labels')
     eval1 = model.evaluate(x_test, y_test)

@@ -3,6 +3,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 from data_loader import *
 import numpy as np
+import multiprocessing as mp
 from multiprocessing import Pool
 
 def define_model(input_shape):
@@ -15,7 +16,7 @@ def define_model(input_shape):
         tf.keras.layers.Dense(64, activation="relu"),
         tf.keras.layers.Dense(32, activation="relu"),
         tf.keras.layers.Dense(16, activation="relu"),
-        tf.keras.layers.Dropout(0.2),
+        #tf.keras.layers.Dropout(0.2), 
         tf.keras.layers.Dense(1, activation='sigmoid')
     ])
 
@@ -25,7 +26,7 @@ def define_model(input_shape):
     
     return model
 
-def train_teachers(subsets, nb_tchrs, nb_epochs=20):
+def train_teachers(subsets, nb_tchrs, nb_epochs=100):
     fi = []
 
     i = 0
@@ -44,7 +45,7 @@ def train_teachers(subsets, nb_tchrs, nb_epochs=20):
 
     return fi
 
-def train_teacher(subset, nb_epochs=20):
+def train_teacher(subset, nb_epochs=100):
     x_train, _, y_train, _, _, _ = subset
     x_train, y_train = np.array(x_train), np.array(y_train)
 
@@ -55,7 +56,7 @@ def train_teacher(subset, nb_epochs=20):
     
 def parallel_training_teachers(subsets):
     print("Training teachers...", end="")
-    with Pool(10) as p:
+    with Pool(mp.cpu_count()) as p:
         fi = p.map(train_teacher, subsets)
     print("Done")
     return fi

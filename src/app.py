@@ -107,8 +107,8 @@ while True:
         # teachers hist 
         tchr_ax.bar(x1, accuracies, width = b_width, color=colors[0], label="accuracy")
         tchr_ax.bar(x2, rec, width = b_width, color=[colors[1] for _ in eod],label="REC")
-        tchr_ax.bar(x3, eod, width = b_width, color=[colors[2] for _ in spd], label="EOD")
-        #tchr_ax.bar(x4, di, width = b_width, color=[colors[3] for _ in spd], label="DI")
+        #tchr_ax.bar(x4, di, width = b_width, color=[colors[2] for _ in spd], label="DI")
+        tchr_ax.bar(x3, eod, width = b_width, color=[colors[3] for _ in spd], label="EOD")
         cp_state = states.copy()
         cp_state.pop(2)
         tchr_ax.set_xticks([x + b_width/4 for x in x2], [cp_state[t] for t in range(nb_teachers)])
