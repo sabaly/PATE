@@ -86,6 +86,30 @@ def only_unfair(data_to_label):
     voters = list(set(teachers) - set(to_ban))
     return methode(data_to_label, voters=voters)
 
+def weighed_vote(data_to_label, voters=[], fairness = fairness_metrics):
+    global fairness_metrics
+    if fairness == []:
+        fairness = fairness_metrics
+    # predictions from teachers
+    if voters == []:
+        voters = teachers.copy()
+    preds = []
+    for tchr in voters:
+        pred = tchr.predict(data_to_label)
+        pred = list(np.round(pred))
+        preds.append([p[0] for p in pred])
+    preds = np.asarray(preds, dtype=np.int32)
+    # voting
+    labels = []
+    for x in range(np.shape(preds)[1]):
+        pred = list(preds[:,x])
+        for i in range(len(pred)):
+            if fairness[i] < 0.1:
+                pred.append(pred[i])
+        n_y_x = np.bincount(pred)
+        labels.append(np.argmax(n_y_x))
+    return labels
+
 
 
 def update_aggregator(current):

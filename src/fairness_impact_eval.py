@@ -37,8 +37,13 @@ set_metrics(eod)
 
 nb_fair = [x < 0.1 for x in eod].count(True)
 
+done = [0, 7]
+if nb_fair  in done:
+    print("OUPS ! >>> ", nb_fair, " <<<")
+    exit(1)
+
 if "_bis" in dataset:
-    name = dataset + "_" + str(nb_fair) + "_fair"+ ".png"
+    name = dataset + "_" + str(nb_fair) + "_fair_wv"+ ".png"
 else:
     name = dataset + ".png"
     nb_fair = 0
@@ -63,10 +68,10 @@ ax1.set_xlabel("Teachers")
 ax1.set_ylabel("Metrics")
 
 for cf in confs:
-    print(f'Training  {cf} teachers')
     # setting conf
-    if cf != "All" and (nb_fair == 0 or nb_fair == nb_teachers):
+    if cf != "All" :#and (nb_fair == 0 or nb_fair == nb_teachers):
         break
+    print(f'Training  {cf} teachers')
     if cf == "All":
         aggregator = plurality
     elif cf == "Only fair":
@@ -85,6 +90,17 @@ for cf in confs:
         y_axis.append(st_stats["EOD"])
     ax2.plot(list(range(st_train_times)), y_axis, colors[color_index], label=cf)
     color_index = color_index + 1
+
+aggregator = weighed_vote
+y_train = np.asarray(aggregator(x_train))
+yhat_test = np.asarray(aggregator(x_test))
+y_axis = []
+for _ in range(st_train_times):
+    st_model = train_student(x_train, y_train, verbose=False)
+    y_pred = eval_student_model(st_model, x_test, y_test, yhat_test, verbose=False)
+    st_stats = fairness(st_model, x_test, y_pred, s_test)
+    y_axis.append(st_stats["EOD"])
+ax2.plot(list(range(st_train_times)), y_axis, colors[color_index], label="weighed vote", linestyle="dashed")
 
 plt.title(f"PATE impacts on fairness")
 plt.legend()
