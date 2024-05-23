@@ -5,6 +5,7 @@ from aggregator import *
 
 
 def define_model(input_shape):
+    tf.keras.utils.set_random_seed(0)
     model = tf.keras.models.Sequential([
         tf.keras.Input(input_shape),
         tf.keras.layers.Dense(16, activation="relu"),
@@ -28,7 +29,8 @@ def train_student(x_train, y_train, nb_epochs=100, verbose=True):
     model = define_model(x_train.shape[1:])
     if verbose:
         print("Training student...", end="")
-    model.fit(x_train, y_train, epochs = nb_epochs, verbose=False)
+
+    model.fit(x_train, y_train, epochs = nb_epochs, verbose=False, shuffle=False)
     if verbose:
         print("Done")
     return model

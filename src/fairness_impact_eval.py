@@ -22,8 +22,8 @@ alpha = [100, 100]
 update_alpha(alpha)
 dataset = "acsemployment_bis"
 nb_teachers = 10
-st_train_times = 10
-nb_fair_tchrs = 1 # wished
+#st_train_times = 10
+nb_fair_tchrs = 2 # wished
 
 # prepare datasets !
 subsets, student = get(dataset, nb_teachers, nb_fair_tchrs=nb_fair_tchrs)
@@ -36,14 +36,14 @@ accuracies, eod, spd, di = stats(nb_teachers, teachers, subsets)
 set_metrics(eod)
 
 nb_fair = [x < 0.1 for x in eod].count(True)
-
+""" 
 done = [0, 7]
 if nb_fair  in done:
     print("OUPS ! >>> ", nb_fair, " <<<")
-    exit(1)
+    exit(1) """
 
 if "_bis" in dataset:
-    name = dataset + "_" + str(nb_fair) + "_fair_wv"+ ".png"
+    name = dataset + "_" + str(nb_fair) + "_fair"+ ".png"
 else:
     name = dataset + ".png"
     nb_fair = 0
@@ -67,9 +67,10 @@ ax1.set_ylim([0,1.1])
 ax1.set_xlabel("Teachers")
 ax1.set_ylabel("Metrics")
 
+eods = []
 for cf in confs:
     # setting conf
-    if cf != "All" :#and (nb_fair == 0 or nb_fair == nb_teachers):
+    if cf != "All" and (nb_fair == 0 or nb_fair == nb_teachers):
         break
     print(f'Training  {cf} teachers')
     if cf == "All":
@@ -82,30 +83,25 @@ for cf in confs:
         aggregator = only_unfair
     y_train = np.asarray(aggregator(x_train))
     yhat_test = np.asarray(aggregator(x_test))
-    y_axis = []
-    print("Training students ... ", end="")
-    for _ in range(st_train_times):
-        st_model = train_student(x_train, y_train, verbose=False, nb_epochs=200)
-        #eval_student_model(st_model, x_test, y_test, yhat_test, verbose=False)
-        st_stats = fairness(st_model, x_test, yhat_test, s_test)
-        y_axis.append(st_stats["EOD"])
-    print("Done")
-    ax2.plot(list(range(st_train_times)), y_axis, colors[color_index], label=cf)
-    color_index = color_index + 1
+    st_model = train_student(x_train, y_train, verbose=False)
+    st_stats = fairness(st_model, x_test, yhat_test, s_test)
+    eods.append(st_stats["EOD"])
+
+
+ax2.bar([1], eods[0], width = b_width, color=colors[0],label="All")
+if len(eods) > 1:
+    ax2.bar([1 + b_width], eods[1], width = b_width, color=colors[1],label="Only fair")
+    ax2.bar([1 + 2*b_width], eods[2], width = b_width, color=colors[2],label="Only unfair")
 
 aggregator = weighed_vote
 y_train = np.asarray(aggregator(x_train))
 yhat_test = np.asarray(aggregator(x_test))
-y_axis = []
-print("Training students ... ", end="")
-for _ in range(st_train_times):
-    st_model = train_student(x_train, y_train, verbose=False, nb_epochs=200)
-    #y_pred = eval_student_model(st_model, x_test, y_test, yhat_test, verbose=False)
-    st_stats = fairness(st_model, x_test, yhat_test, s_test)
-    y_axis.append(st_stats["EOD"])
-print("Done")
-ax2.plot(list(range(st_train_times)), y_axis, colors[color_index], label="weighed vote", linestyle="dashed")
 
+st_model = train_student(x_train, y_train, verbose=False)
+st_stats = fairness(st_model, x_test, yhat_test, s_test)
+
+ax2.bar([1 + 3*b_width], st_stats["EOD"], width = b_width, color=colors[3], label="weighed vote")
+ax2.set_xticks([1 + i*b_width for i in range(1, 4)], ['' for _ in range(len(eods) + 1)])
 plt.title(f"PATE impacts on fairness")
 plt.legend()
 plt.savefig("../img/"+name)

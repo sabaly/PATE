@@ -51,14 +51,15 @@ states = ["HI", "CA", "AK", "PR", "NV", "NM", "OK", "NY", "WA", "AZ",  "MD",
 "FL", "MS", "SC", "AR", "SD", "AL", "MI", "KS", "ID", "MN", "MT", "OH", "IN",
 "TN", "PA", "NE", "MO", "WY", "ND", "WI", "KY", "NH", "ME", "IA", "VT", "WV"] # "NJ"
 
-alpha = [150,100]
-uf_alphas = [[20, 50], [50, 100], [300, 5], [50, 100], [50, 100], [50, 100], [350, 10], [50, 100], [20, 50], [200, 10], [50, 100], [250, 1], [50, 100], [250, 20], [250, 1], [50, 100], [300, 5], [50, 100], [300, 5], [20, 50], [20, 50], [250, 20], [50, 100], [50, 100], [250, 20], [200, 10], [50, 100], [20, 50], [250, 20], [20, 50]]
+alpha = [100,100]
+alphas = [[100, 100]]*(len(states) - 1)
+alphas[9] = [100,180]
 def update_alpha(new_alpha):
     global alpha
     alpha = new_alpha
 
 
-def load_ACSEmployment(year=2018, horizon="1-Year", states=states, nb_fair_tchrs=0):
+def load_ACSEmployment(year=2018, horizon="1-Year", states=states):
     data_src = ACSDataSource(survey_year=year, horizon=horizon, survey="person")
     subsets = []
     if len(states) > 2:
@@ -99,7 +100,7 @@ def load_ACSEmployment_bis(year=2018, horizon="1-Year", states=states, nb_fair_t
             up_grp_pr = df[(df["RAC1P"] == 2) & (df["ESR"] == True)]
             rest_of_df = df[((df["RAC1P"] != 1) & (df["RAC1P"] != 2)) | (df["ESR"] == False)]
             p_vs_up = pd.concat([p_grp_pr, up_grp_pr])
-            #alpha = uf_alphas[states.index(st)]
+            alpha = alphas[states.index(st)]
             dist = np.random.dirichlet(alpha, 1)
             size_p_grp = int(dist[0][0]*p_vs_up.shape[0])
             size_up_grp = p_vs_up.shape[0]-size_p_grp

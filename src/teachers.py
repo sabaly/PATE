@@ -6,7 +6,8 @@ import numpy as np
 import multiprocessing as mp
 from multiprocessing import Pool
 
-def define_model(input_shape):
+def define_model(input_shape, index=0):
+    tf.keras.utils.set_random_seed(index)
     model = tf.keras.models.Sequential([
         tf.keras.Input(input_shape),
         tf.keras.layers.Dense(16, activation="relu"),
@@ -45,11 +46,14 @@ def train_teachers(subsets, nb_tchrs, nb_epochs=100):
 
     return fi
 
-def train_teacher(subset, nb_epochs=100):
+def wrapper(args):
+    return train_teacher(*args)
+
+def train_teacher(subset, index, nb_epochs=60):
     x_train, _, y_train, _, _, _ = subset
     x_train, y_train = np.array(x_train), np.array(y_train)
 
-    model = define_model((x_train.shape[-1],))
+    model = define_model((x_train.shape[-1],), index=index)
     model.fit(x_train, y_train, epochs=nb_epochs, verbose=False)
 
     return model
@@ -57,7 +61,7 @@ def train_teacher(subset, nb_epochs=100):
 def parallel_training_teachers(subsets):
     print("Training teachers...", end="")
     with Pool(mp.cpu_count()) as p:
-        fi = p.map(train_teacher, subsets)
+        fi = p.map(wrapper, [(subsets[i], i) for i in range(len(subsets))])
     print("Done")
     return fi
 
