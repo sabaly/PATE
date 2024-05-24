@@ -18,12 +18,13 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     fxn()
 
-alpha = [100, 100]
-update_alpha(alpha)
+if len(sys.argv) < 3:
+    print("Usage : fairness_impact_eval.py <nb_teachers> <nb_fair_wished>")
+    exit(1)
+
 dataset = "acsemployment_bis"
-nb_teachers = 10
-#st_train_times = 10
-nb_fair_tchrs = 2 # wished
+nb_teachers = int(sys.argv[1])
+nb_fair_tchrs = int(sys.argv[2]) # wished
 
 # prepare datasets !
 subsets, student = get(dataset, nb_teachers, nb_fair_tchrs=nb_fair_tchrs)
@@ -36,12 +37,9 @@ accuracies, eod, spd, di = stats(nb_teachers, teachers, subsets)
 set_metrics(eod)
 
 nb_fair = [x < 0.1 for x in eod].count(True)
-""" 
-done = [0, 7]
-if nb_fair  in done:
-    print("OUPS ! >>> ", nb_fair, " <<<")
-    exit(1) """
 
+if abs(nb_fair_tchrs - nb_fair) > 2:
+    exit(1)
 if "_bis" in dataset:
     name = dataset + "_" + str(nb_fair) + "_fair"+ ".png"
 else:
@@ -101,10 +99,11 @@ st_model = train_student(x_train, y_train, verbose=False)
 st_stats = fairness(st_model, x_test, yhat_test, s_test)
 
 ax2.bar([1 + 3*b_width], st_stats["EOD"], width = b_width, color=colors[3], label="weighed vote")
-ax2.set_xticks([1 + i*b_width for i in range(1, 4)], ['' for _ in range(len(eods) + 1)])
+ax2.set_xticks([1 + i*b_width for i in range(1, 4)], ['' for _ in range(1, len(eods) + 1)])
 plt.title(f"PATE impacts on fairness")
 plt.legend()
-plt.savefig("../img/"+name)
+path = "../img/archive_" + str(nb_teachers) + "/"
+plt.savefig(path+name)
 
 
 
