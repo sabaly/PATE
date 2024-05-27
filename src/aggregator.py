@@ -62,10 +62,12 @@ def plurality(data_to_label, voters=[]):
     preds = np.asarray(preds, dtype=np.int32)
     # voting
     labels = []
+    consent = []
     for x in range(np.shape(preds)[1]):
         n_y_x = np.bincount(preds[:,x])
+        consent.append(np.var(preds[:,x]))
         labels.append(np.argmax(n_y_x))
-    return labels
+    return np.asarray(labels), np.mean(consent)
 
 methode = plurality
 def only_fair(data_to_label):
@@ -101,14 +103,16 @@ def weighed_vote(data_to_label, voters=[], fairness = fairness_metrics):
     preds = np.asarray(preds, dtype=np.int32)
     # voting
     labels = []
+    consent = []
     for x in range(np.shape(preds)[1]):
         pred = list(preds[:,x])
         for i in range(len(pred)):
             if fairness[i] < 0.1:
                 pred.append(pred[i])
+        consent.append(np.var(pred))
         n_y_x = np.bincount(pred)
         labels.append(np.argmax(n_y_x))
-    return labels
+    return np.asarray(labels), np.mean(consent)
 
 
 

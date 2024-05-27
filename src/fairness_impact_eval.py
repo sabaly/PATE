@@ -52,7 +52,7 @@ else:
 
 confs = ["All", "Only fair", "Only unfair"]
 
-fig, (ax1, ax2)= plt.subplots(1, 2, sharey=True)
+fig, (ax1, ax2, ax3)= plt.subplots(1, 3, sharey=True)
 b_width = 0.3
 x = range(len(accuracies))
 # teachers hist 
@@ -65,7 +65,8 @@ ax1.set_ylim([0,1.1])
 ax1.set_xlabel("Teachers")
 ax1.set_ylabel("Metrics")
 
-#eods = []
+xticks = ["all", "f", "uf", "wv"]
+stats = {}
 for cf in confs:
     # setting conf
     if cf != "All" and (nb_fair == 0 or nb_fair == nb_teachers):
@@ -76,33 +77,43 @@ for cf in confs:
         x = 1
     elif cf == "Only fair":
         aggregator = only_fair
-        x =1 + b_width
+        x += 3*b_width/2
     else:
         if nb_fair == nb_teachers:
             continue
         aggregator = only_unfair
-        x =1 + 2*b_width
-    y_train = np.asarray(aggregator(x_train))
-    yhat_test = np.asarray(aggregator(x_test))
+        x += 3*b_width/2
+    y_train, _ = aggregator(x_train)
+    yhat_test, consensus = aggregator(x_test)
     st_model = train_student(x_train, y_train, verbose=False)
-    ev1, ev2 = eval_student_model(st_model, x_test, y_test, yhat_test)
+    ev1, ev2 = eval_student_model(st_model, x_test, y_test, yhat_test, verbose=False)
     st_stats = fairness(st_model, x_test, yhat_test, s_test)
-    #ax2.plot([0, 1], [ev2[1]])
-    ax2.bar([x], st_stats["EOD"], width = b_width, color=colors[color_index],label=f"{cf} [acc - {int(ev1[1]*100), int(ev2[1]*100)}]")
+    stats[cf] = [ev1[1], ev2[1], st_stats["EOD"]]
+    ax2.bar([x], consensus, width = b_width, color=colors[color_index])
     color_index += 1
 
-""" 
-aggregator = weighed_vote
-y_train = np.asarray(aggregator(x_train))
-yhat_test = np.asarray(aggregator(x_test))
+x=1
+color_index = 0
+for cf, stat in stats.items():
+    ax3.bar([x], stat, width = b_width, color=["#fcba03", "#8c6908", colors[color_index]], bottom=[0,0,0], label=["ACC-Labeled data", "ACC - True labels", cf])
+    x += 3*b_width/2
+    color_index+=1
 
+ax3.set_xlabel("Student")
+aggregator = weighed_vote
+y_train, _= aggregator(x_train)
+yhat_test, consensus = aggregator(x_test)
 st_model = train_student(x_train, y_train, verbose=False)
 st_stats = fairness(st_model, x_test, yhat_test, s_test)
+ev1, ev2 = eval_student_model(st_model, x_test, y_test, yhat_test, verbose=False)
+stat = [ev1[1], ev2[1], st_stats["EOD"]]
+ax3.bar([x], stat, width = b_width, color=["#fcba03", "#8c6908", colors[color_index]],  label=["ACC-Labeled data", "ACC - True labels", "Weighed_vote"])
+ax2.bar([x], consensus, width = b_width, color=colors[color_index])
 
-ax2.bar([1 + 3*b_width], st_stats["EOD"], width = b_width, color=colors[3], label="weighed vote")
-"""
-#ax2.set_xticks([1 + b_width], ['']) 
+ax3.set_xticks([1 + i*3*b_width/2 for i in range(len(xticks))], xticks) 
+ax2.set_xticks([1 + i*3*b_width/2 for i in range(len(xticks))], xticks) 
 
+ax2.set_xlabel("Teachers's concensus")
 plt.title(f"PATE impacts on fairness")
 plt.legend()
 path = "../img/archive_" + str(nb_teachers) + "/"

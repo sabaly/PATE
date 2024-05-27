@@ -27,7 +27,7 @@ def define_model(input_shape, index=0):
     
     return model
 
-def train_teachers(subsets, nb_tchrs, nb_epochs=100):
+def train_teachers(subsets, nb_tchrs, nb_epochs=60):
     fi = []
 
     i = 0
@@ -49,7 +49,7 @@ def train_teachers(subsets, nb_tchrs, nb_epochs=100):
 def wrapper(args):
     return train_teacher(*args)
 
-def train_teacher(subset, index, nb_epochs=100):
+def train_teacher(subset, index, nb_epochs=60):
     x_train, _, y_train, _, _, _ = subset
     x_train, y_train = np.array(x_train), np.array(y_train)
 
