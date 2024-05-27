@@ -46,7 +46,7 @@ def eval_student_model(model, x_test, true_y_test, y_test, verbose=True):
     eval2 = model.evaluate(x_test, true_y_test)
     if verbose:
         print(f"**** Results \n\t-loss : {eval2[0]}\n\t-accuracy : {eval2[1]}")
-    return y_test
+    return eval1, eval2
     
 
 

@@ -87,8 +87,8 @@ while True:
         y_train = np.asarray(aggregator(x_train))
         st_model = train_student(x_train, y_train)
         yhat_test = np.asarray(aggregator(x_test))
-        y_pred = eval_student_model(st_model, x_test, y_test, yhat_test)
-        st_stats = fairness(st_model, x_test, y_pred, s_test)
+        eval1, eval2 = eval_student_model(st_model, x_test, y_test, yhat_test)
+        st_stats = fairness(st_model, x_test, yhat_test, s_test)
         student_trained = True
     elif action==3:
         nb_fair_tchrs = int(input("Enter number of fair teachers >>> "))

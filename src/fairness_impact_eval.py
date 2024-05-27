@@ -38,8 +38,8 @@ set_metrics(eod)
 
 nb_fair = [x < 0.1 for x in eod].count(True)
 
-if abs(nb_fair_tchrs - nb_fair) > 2:
-    exit(1)
+""" if abs(nb_fair_tchrs - nb_fair) > 2:
+    exit(1) """
 if "_bis" in dataset:
     name = dataset + "_" + str(nb_fair) + "_fair"+ ".png"
 else:
@@ -65,7 +65,7 @@ ax1.set_ylim([0,1.1])
 ax1.set_xlabel("Teachers")
 ax1.set_ylabel("Metrics")
 
-eods = []
+#eods = []
 for cf in confs:
     # setting conf
     if cf != "All" and (nb_fair == 0 or nb_fair == nb_teachers):
@@ -73,24 +73,25 @@ for cf in confs:
     print(f'Training  {cf} teachers')
     if cf == "All":
         aggregator = plurality
+        x = 1
     elif cf == "Only fair":
         aggregator = only_fair
+        x =1 + b_width
     else:
         if nb_fair == nb_teachers:
             continue
         aggregator = only_unfair
+        x =1 + 2*b_width
     y_train = np.asarray(aggregator(x_train))
     yhat_test = np.asarray(aggregator(x_test))
     st_model = train_student(x_train, y_train, verbose=False)
+    ev1, ev2 = eval_student_model(st_model, x_test, y_test, yhat_test)
     st_stats = fairness(st_model, x_test, yhat_test, s_test)
-    eods.append(st_stats["EOD"])
+    #ax2.plot([0, 1], [ev2[1]])
+    ax2.bar([x], st_stats["EOD"], width = b_width, color=colors[color_index],label=f"{cf} [acc - {int(ev1[1]*100), int(ev2[1]*100)}]")
+    color_index += 1
 
-
-ax2.bar([1], eods[0], width = b_width, color=colors[0],label="All")
-if len(eods) > 1:
-    ax2.bar([1 + b_width], eods[1], width = b_width, color=colors[1],label="Only fair")
-    ax2.bar([1 + 2*b_width], eods[2], width = b_width, color=colors[2],label="Only unfair")
-
+""" 
 aggregator = weighed_vote
 y_train = np.asarray(aggregator(x_train))
 yhat_test = np.asarray(aggregator(x_test))
@@ -99,12 +100,12 @@ st_model = train_student(x_train, y_train, verbose=False)
 st_stats = fairness(st_model, x_test, yhat_test, s_test)
 
 ax2.bar([1 + 3*b_width], st_stats["EOD"], width = b_width, color=colors[3], label="weighed vote")
-ax2.set_xticks([1 + i*b_width for i in range(1, 4)], ['' for _ in range(1, len(eods) + 1)])
+"""
+#ax2.set_xticks([1 + b_width], ['']) 
+
 plt.title(f"PATE impacts on fairness")
 plt.legend()
 path = "../img/archive_" + str(nb_teachers) + "/"
 plt.savefig(path+name)
-
-
 
 
