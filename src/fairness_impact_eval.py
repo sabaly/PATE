@@ -52,11 +52,11 @@ else:
 
 confs = ["All", "Only fair", "Only unfair"]
 
-fig, (ax1, ax2, ax3)= plt.subplots(1, 3)
+fig, (ax1, ax2, ax3)= plt.subplots(1, 3, sharey=True)
 b_width = 0.3
 x = range(len(accuracies))
 # teachers hist 
-ax1.bar(x, eod, width = b_width, color=[colors[3] for _ in eod],label="EOD")
+ax1.bar(x, eod, width = b_width, color=["green" for _ in eod], hatch="//")
 cp_state = states.copy()
 cp_state.pop(2)
 ax1.set_xticks(x, ['' for _ in range(nb_teachers)])
@@ -89,13 +89,13 @@ for cf in confs:
     ev1, ev2 = eval_student_model(st_model, x_test, y_test, yhat_test, verbose=False)
     st_stats = fairness(st_model, x_test, yhat_test, s_test)
     stats[cf] = [ev1[1], ev2[1], st_stats["EOD"]]
-    ax2.bar([x], consensus, width = b_width, color="red")
+    ax2.bar([x], 4*consensus, width = b_width, color="red")
     color_index += 1
 
 x=1
 color_index = 0
 for cf, stat in stats.items():
-    ax3.bar([x], stat, width = b_width, color=["#fcba03", "#8c6908", "green"], bottom=[0,0,0], label=["", "", "EOD"], hatch=["", "", "/"])
+    ax3.bar([x], stat, width = b_width, color=["#fcba03", "#8c6908", "green"], bottom=[0,0,0], hatch=["", "", "//"])
     x += 3*b_width/2
 
 ax3.set_xlabel("Student")
@@ -107,17 +107,13 @@ st_stats = fairness(st_model, x_test, yhat_test, s_test)
 ev1, ev2 = eval_student_model(st_model, x_test, y_test, yhat_test, verbose=False)
 stat = [ev1[1], ev2[1], st_stats["EOD"]]
 ax3.bar([x], stat, width = b_width, color=["#fcba03", "#8c6908", "green"],  label=["ACC-Labeled data", "ACC - True labels", "EOD"], hatch=["", "", "/"])
-ax2.bar([x], consensus, width = b_width, color="red")
+ax2.bar([x], 4*consensus, width = b_width, color="red", label="consensus")
 
 ax3.set_xticks([1 + i*3*b_width/2 for i in range(len(xticks))], xticks) 
 ax2.set_xticks([1 + i*3*b_width/2 for i in range(len(xticks))], xticks) 
 
 ax2.set_xlabel("Teachers's concensus")
-plt.title(f"PATE impacts on fairness")
-"""  handles, labels = plt.gca().get_legend_handles_labels()
-by_label = dict(zip(labels, handles))
-ax3.legend(by_label.values(), by_label.keys())"""
-#ax3.legend(ncol=2)
+fig.legend(loc="outside upper left",ncol=4)
 path = "../img/archive_" + str(nb_teachers) + "/" + name
 
 while os.path.isfile(path):
