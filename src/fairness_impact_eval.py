@@ -49,14 +49,18 @@ name = dataset + "_" + str(nb_fair_tchrs) + "_fair"+ ".png"
 # load student dataset
 (x_train, x_test, y_train, y_test, s_train, s_test) = load_student_data("AK")
 
-""" labels, spd_ws = spd_aggregator(x_train, group=s_train)
+labels, spd_ws = spd_aggregator(x_train, group=s_train)
+print(eod)
 print("nb of 0 in labels = ", np.count_nonzero(labels == 0), end="\n#################################\n")
 print(spd_ws, end="\n#########\n")
-labels, _ = fair_fed_agg(x_train)
+labels, spd_ws = methode_2(x_train, group=s_train)
 print("nb of 0 in labels = ", np.count_nonzero(labels == 0), end="\n#################################\n")
-print(spd_ws)
+print(spd_ws, end="\n#########\n")
+labels, ws = fair_fed_agg(x_train)
+print("nb of 0 in labels = ", np.count_nonzero(labels == 0), end="\n#################################\n")
+print(ws)
 exit(1)
- """
+
 confs = ["All", "Only fair", "Only unfair"]
 
 fig, (ax1, ax2, ax3)= plt.subplots(1, 3, sharey=True)
