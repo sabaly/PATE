@@ -1,9 +1,9 @@
 #!/bin/sh
-nb_teachers="30 45"
+nb_teachers="10"
 for nb_tchrs in $nb_teachers
 do
     echo ">>> Number of teachers : " $nb_tchrs
-    for nb_fair in $(seq 12 $nb_tchrs) #$((4 * $nb_tchrs / 5))
+    for nb_fair in $(seq 1 $nb_tchrs)
     do
         python3 fairness_impact_eval.py $nb_tchrs $nb_fair
     done

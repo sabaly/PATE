@@ -17,7 +17,6 @@ def define_model(input_shape, index=0):
         tf.keras.layers.Dense(64, activation="relu"),
         tf.keras.layers.Dense(32, activation="relu"),
         tf.keras.layers.Dense(16, activation="relu"),
-        #tf.keras.layers.Dropout(0.2), 
         tf.keras.layers.Dense(1, activation='sigmoid')
     ])
 
@@ -70,3 +69,35 @@ def eval_teacher_model(model, x_test, y_test):
     eval1 = model.evaluate(x_test, y_test)
     print(f"**** Results \n\t-loss : {eval1[0]}\n\t-accuracy : {eval1[1]}")
     
+
+def aggregate_dataset(id, features, labels, group):
+    p_grp_tp = features[(group == 1) & (labels == 1)]
+    up_grp_tp = features[(group == 2) & (labels == 1)]
+    S = pd.concat([p_grp_tp, up_grp_tp])
+    TCHRID = [id]*S.shape[0]
+    S = S.assign(TCHRID=TCHRID)
+    return S
+
+def global_fair_component(id, yhat, S, y_test, s_test):
+    sum_ni = S.shape[0]
+    n_id = S[S["TCHRID"]==id].shape[0]
+    a = np.mean(yhat[(y_test == 1) & (s_test == 1) & (S["TCHRID"] == id)])
+    b = np.mean(S[(s_test == 1) & (y_test ==1)][S["TCHRID"] == id])
+    c = np.mean(S[(s_test == 1) & (y_test == 1)])
+    a = 0 if a is None else a
+    b = 0 if b is None else b
+    c = 0 if c is None else c
+    p_grp = a*b/c
+    a = np.mean(yhat[(y_test == 1) & (s_test == 2) & (S["TCHRID"] == id)])
+    b = np.mean(S[(s_test == 2) & (y_test ==1)][S["TCHRID"] == id])
+    c = np.mean(S[(s_test == 2) & (y_test == 1)])
+    a = 0 if a is None else a
+    b = 0 if b is None else b
+    c = 0 if c is None else c
+    up_grp = a*b/c
+    m = up_grp - p_grp
+
+    return m
+
+
+

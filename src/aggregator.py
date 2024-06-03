@@ -1,4 +1,5 @@
 import numpy as np
+from analysis import mean
 
 teachers = []
 def update_teachers(tchrs):
@@ -16,7 +17,7 @@ def laplacian_noisy_vote(data_to_label, gamma=0.1, voters=[]):
         voters = teachers.copy()
     preds = []
     for tchr in voters:
-        pred = tchr.predict(data_to_label)
+        pred = tchr.model.predict(data_to_label)
         pred = np.round(pred)
         preds.append([p[0] for p in pred])
     preds = np.asarray(preds, dtype=np.int32)
@@ -36,7 +37,7 @@ def gaussian_noisy_vote(data_to_label, mu=0, sigma=1, voters=[]):
         voters = teachers.copy()
     preds = []
     for tchr in voters:
-        pred = tchr.predict(data_to_label)
+        pred = tchr.model.predict(data_to_label)
         pred = np.round(pred)
         preds.append([p[0] for p in pred])
     preds = np.asarray(preds, dtype=np.int32)
@@ -56,7 +57,7 @@ def plurality(data_to_label, voters=[]):
         voters = teachers.copy()
     preds = []
     for tchr in voters:
-        pred = tchr.predict(data_to_label)
+        pred = tchr.model.predict(data_to_label)
         pred = np.round(pred)
         preds.append([p[0] for p in pred])
     preds = np.asarray(preds, dtype=np.int32)
@@ -97,7 +98,7 @@ def weighed_vote(data_to_label, voters=[], fairness = fairness_metrics):
         voters = teachers.copy()
     preds = []
     for tchr in voters:
-        pred = tchr.predict(data_to_label)
+        pred = tchr.model.predict(data_to_label)
         pred = list(np.round(pred))
         preds.append([p[0] for p in pred])
     preds = np.asarray(preds, dtype=np.int32)
@@ -114,7 +115,79 @@ def weighed_vote(data_to_label, voters=[], fairness = fairness_metrics):
         labels.append(np.argmax(n_y_x))
     return np.asarray(labels), np.mean(consent)
 
+# ######################
+# FairFed weighs
+# ######################
+def computes_weigh(teachers, beta=1):
+    # computes global metric
+    fg = 0
+    sum_ni = 0
+    for tchr in teachers:
+        fg += tchr.local_m
+        nk = tchr.splited_data[1].shape[0]
+        sum_ni += nk
+    fg = abs(fg)
 
+    ws = [0]*len(teachers)
+    for i in range(len(teachers)):
+        nk = teachers[i].splited_data[1].shape[0]
+        ws[i] = np.exp(-beta*abs(teachers[i].metrics["EOD"] - fg)) * nk/sum_ni
+    sum_ws = sum(ws)
+    for i in range(len(ws)):
+        ws[i] = ws[i]/sum_ws
+    return ws
+def fair_fed_agg(data_to_label, voters=[]):
+    # predictions from teachers
+    if voters == []:
+        voters = teachers.copy()
+    preds = []
+    for tchr in voters:
+        pred = tchr.model.predict(data_to_label)
+        pred = np.round(pred)
+        preds.append([p[0] for p in pred])
+    preds = np.asarray(preds, dtype=np.int32)
+
+    # computes weighs
+    weighs = computes_weigh(voters)
+
+    labels = []
+    for x in range(np.shape(preds)[1]):
+        n_y_x = np.bincount(preds[:,x])
+        labels.append(np.round(sum([weighs[i]*n_y_x[i] for i in range(len(n_y_x))]))) # to change
+    return np.asarray(labels), None
+
+# ######################
+# Spd weighs
+# ######################
+def get_spd_weighs(x_train, preds, group):
+    spds = []
+    for yhat in preds:
+        spd = 1-abs(mean(x_train[(group == 1) & (yhat == 1)]) - mean(x_train[(group == 2) & (yhat == 1)]))
+        spds.append(spd)
+    print(spds)
+    print()
+    sum_ws = sum(spds)
+    for i in range(len(spds)):
+        spds[i] = spds[i]/sum_ws
+    return spds
+
+def spd_aggregator(data_to_label, voters=[], group=[]):
+    # predictions from teachers
+    if voters == []:
+        voters = teachers.copy()
+    preds = []
+    for tchr in voters:
+        pred = tchr.model.predict(data_to_label)
+        pred = np.round(pred)
+        preds.append([p[0] for p in pred])
+    preds = np.asarray(preds, dtype=np.int32)
+
+    weighs = get_spd_weighs(data_to_label, preds, group)
+    labels = []
+    for x in range(np.shape(preds)[1]):
+        n_y_x = np.bincount(preds[:,x])
+        labels.append(np.round(sum([weighs[i]*n_y_x[i] for i in range(len(n_y_x))]))) # to change
+    return np.asarray(labels), weighs
 
 def update_aggregator(current):
     choice = input("1. Plurality \t 2. LNMax\t 3. GNMax \n4. Only Fair \t 5. Only unfair\n (0 to exit)>>> ")
@@ -150,3 +223,4 @@ def update_aggregator(current):
         return only_unfair
     else:
         return current
+    
