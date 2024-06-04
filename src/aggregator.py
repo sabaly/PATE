@@ -137,6 +137,7 @@ def computes_weigh(teachers, beta=1, gamma=100):
     for i in range(len(ws)):
         ws[i] = int(np.floor(gamma*ws[i]))
     return ws
+
 def fair_fed_agg(data_to_label, group=[], voters=[], fairness=fairness_metrics):
     # predictions from teachers
     if fairness == []:

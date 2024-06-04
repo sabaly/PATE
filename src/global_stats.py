@@ -2,7 +2,6 @@ import sys
 from teachers import *
 from student import *
 from aggregator import *
-from data_loader import load_student_data
 #import matplotlib as mpl
 import matplotlib.pyplot as plt
 from analysis import *
@@ -41,34 +40,42 @@ dataset = "acsemployment_bis"
 # student data
 (x_train, x_test, y_train, y_test, s_train, s_test) = load_student_data("AK")
 
-
 conf = ["All", "Only fair", "Only unfair", "Weighed vote", "Fairfed", "Methode1", "Methode2"]
+
+def train_students(nb_teachers, nb_fair_tchrs):
+    loc_st_fairnesse = {}
+    for cf in conf:
+        loc_st_fairnesse[cf] = []
+
+    tchrs_ensemble = Ensemble(nb_teachers, nb_fair_tchrs)
+    update_teachers(tchrs_ensemble.tchrs)
+
+    eod = []
+    for tchrs in tchrs_ensemble.tchrs:
+        eod.append(tchrs.metrics["EOD"])
+    set_metrics(eod)
+
+    for cf in conf:
+        print(f'>>> case : {cf}')
+        aggregator = get_agg(cf)
+        y_train, _ = aggregator(x_train, group=s_train)
+        yhat_test, _ = aggregator(x_test, group=s_test)
+        st_model = train_student(x_train, y_train, verbose=False)
+        st_stats = fairness(st_model, x_test, yhat_test, s_test)
+        loc_st_fairnesse[cf].append(st_stats["EOD"])
+    return loc_st_fairnesse
+
+def wrapper(args):
+    return train_students(*args)
 for nb_teachers in [70]:
     fig, ((ax1,ax2,ax3), (ax4,ax5,ax6)) = plt.subplots(2,3, sharey=True)
     st_fairness = {}
-    print(">>> ", nb_teachers, " teachers")
-    for cf in conf:
-        st_fairness[cf] = []
-    with Pool(mp.cpu_count()) as p:
+    print(">>> ", nb_teachers, " teachers ")
+    with Pool(5) as p:
         loc_st_fairnesses = p.map(wrapper, [(nb_teachers, i) for i in range(1, nb_teachers)])
     
-    for nb_fair_tchrs in range(1, nb_teachers):
-        tchrs_ensemble = Ensemble(nb_teachers, nb_fair_tchrs)
-        update_teachers(tchrs_ensemble.tchrs)
-
-        eod = []
-        for tchrs in tchrs_ensemble.tchrs:
-            eod.append(tchrs.metrics["EOD"])
-        set_metrics(eod)
-
-        for cf in conf:
-            print(f'>>> case : {cf}')
-            aggregator = get_agg(cf)
-            y_train, _ = aggregator(x_train, group=s_train)
-            yhat_test, _ = aggregator(x_test, group=s_test)
-            st_model = train_student(x_train, y_train, verbose=False)
-            st_stats = fairness(st_model, x_test, yhat_test, s_test)
-            st_fairness[cf].append(st_stats["EOD"])
+    for cf in conf:
+        st_fairness[cf] = sum([l_st_f[cf] for l_st_f in loc_st_fairnesses], [])
     color_index = 1
     for cf in conf:
         if cf == "All":

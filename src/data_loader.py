@@ -1,7 +1,6 @@
-import sklearn
-from sklearn.preprocessing import LabelEncoder
+#import sklearn
+#from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
-from art.utils import load_mnist
 import numpy as np
 import pandas as pd
 from random import choice
@@ -22,7 +21,6 @@ def update_alpha(new_alpha):
     global alpha
     alpha = new_alpha
 
-
 def load_ACSEmployment(year=2018, horizon="1-Year", states=states):
     data_src = ACSDataSource(survey_year=year, horizon=horizon, survey="person")
     subsets = []
@@ -38,7 +36,6 @@ def load_ACSEmployment(year=2018, horizon="1-Year", states=states):
         subsets.append((x_train, x_test, y_train, y_test, s_train, s_test))
     return subsets
 
-    
 def load_ACSEmployment_bis(year=2018, horizon="1-Year", states=states, nb_fair_tchrs=0):
     #data_src = ACSDataSource(survey_year=year, horizon=horizon, survey="person")
     subsets = []
@@ -94,21 +91,7 @@ def load_student_data(state, year=2018, horizon="1-Year"):
     return (x_train, x_test, y_train, y_test, s_train, s_test)
 
 def get(dataset_name, nb_teachers=49, nb_fair_tchrs=0):
-    if dataset_name == "adult":
-        X,Y,S = clear_adult_data(ld_adult())
-        subsets = adult_basic_partition(X, Y, S, nb_teachers)
-        return subsets, None
-    elif dataset_name == "mnist":
-        (x_train, train_label), (x_test, test_label), _, _ = load_mnist()
-        y_train = []
-        for i in range(len(train_label)):
-            y_train.append(int(np.argmax(train_label[i])))
-        y_test = []
-        for i in range(len(test_label)):
-            y_test.append(int(np.argmax(test_label[i])))
-        y_train, y_test = np.array(y_train), np.array(y_test)
-        return x_train, x_test, y_train, y_test
-    elif dataset_name == "acsemployment":
+    if dataset_name == "acsemployment":
         return load_ACSEmployment(states=states[:nb_teachers+1]), states[2]
     elif dataset_name == "acsemployment_bis":
         return load_ACSEmployment_bis(states=states[:nb_teachers+1], nb_fair_tchrs=nb_fair_tchrs)
