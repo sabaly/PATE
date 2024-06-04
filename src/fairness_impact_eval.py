@@ -49,7 +49,7 @@ name = dataset + "_" + str(nb_fair_tchrs) + "_fair"+ ".png"
 # load student dataset
 (x_train, x_test, y_train, y_test, s_train, s_test) = load_student_data("AK")
 
-labels, spd_ws = spd_aggregator(x_train, group=s_train)
+""" labels, spd_ws = spd_aggregator(x_train, group=s_train)
 print(eod)
 print("nb of 0 in labels = ", np.count_nonzero(labels == 0), end="\n#################################\n")
 print(spd_ws, end="\n#########\n")
@@ -59,7 +59,7 @@ print(spd_ws, end="\n#########\n")
 labels, ws = fair_fed_agg(x_train)
 print("nb of 0 in labels = ", np.count_nonzero(labels == 0), end="\n#################################\n")
 print(ws)
-exit(1)
+exit(1) """
 
 confs = ["All", "Only fair", "Only unfair"]
 
@@ -81,6 +81,7 @@ stats = {}
 for cf in confs:
     # setting conf
     if cf != "All" and (nb_fair_tchrs == 0 or nb_fair_tchrs == nb_teachers):
+        x += 3*b_width
         break
     print(f'{cf} teachers')
     if cf == "All":
@@ -145,8 +146,19 @@ x += 3*b_width/2
 # weighs computes using spds
 # ###############
 
-print(f"Spd's weighed vote")
+print(f"M1's weighed vote")
 aggregator = spd_aggregator
+y_train, _= aggregator(x_train, group=s_train)
+yhat_test, _ = aggregator(x_test, group=s_test)
+st_model = train_student(x_train, y_train, verbose=False)
+st_stats = fairness(st_model, x_test, yhat_test, s_test)
+ev1, ev2 = eval_student_model(st_model, x_test, y_test, yhat_test, verbose=False)
+stat = [ev1[1], ev2[1], st_stats["EOD"]]
+ax3.bar([x], stat, width = b_width, color=["#fcba03", "#8c6908", "green"], hatch=["", "", "/"])
+x += 3*b_width/2
+
+print(f"M2's weighed vote")
+aggregator = methode_2
 y_train, _= aggregator(x_train, group=s_train)
 yhat_test, _ = aggregator(x_test, group=s_test)
 st_model = train_student(x_train, y_train, verbose=False)
@@ -156,8 +168,7 @@ stat = [ev1[1], ev2[1], st_stats["EOD"]]
 ax3.bar([x], stat, width = b_width, color=["#fcba03", "#8c6908", "green"], hatch=["", "", "/"])
 
 
-
-ax3_xtick = xticks + ["ff", "spd"]
+ax3_xtick = xticks + ["ff", "M1", "M2"]
 ax3.set_xticks([1 + i*3*b_width/2 for i in range(len(ax3_xtick))], ax3_xtick) 
 ax2.set_xticks([1 + i*3*b_width/2 for i in range(len(xticks))], xticks) 
 

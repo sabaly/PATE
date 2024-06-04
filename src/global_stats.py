@@ -41,13 +41,17 @@ dataset = "acsemployment_bis"
 # student data
 (x_train, x_test, y_train, y_test, s_train, s_test) = load_student_data("AK")
 
+
 conf = ["All", "Only fair", "Only unfair", "Weighed vote", "Fairfed", "Methode1", "Methode2"]
-for nb_teachers in [5, 10, 30, 50]:
+for nb_teachers in [70]:
     fig, ((ax1,ax2,ax3), (ax4,ax5,ax6)) = plt.subplots(2,3, sharey=True)
     st_fairness = {}
     print(">>> ", nb_teachers, " teachers")
     for cf in conf:
         st_fairness[cf] = []
+    with Pool(mp.cpu_count()) as p:
+        loc_st_fairnesses = p.map(wrapper, [(nb_teachers, i) for i in range(1, nb_teachers)])
+    
     for nb_fair_tchrs in range(1, nb_teachers):
         tchrs_ensemble = Ensemble(nb_teachers, nb_fair_tchrs)
         update_teachers(tchrs_ensemble.tchrs)
