@@ -1,13 +1,11 @@
-import sys
-from teachers import *
+import sys, os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 from student import *
 from aggregator import *
-from data_loader import load_student_data
-#import matplotlib as mpl
 import matplotlib.pyplot as plt
 from analysis import *
 import warnings
-from teacher_ensemble import Ensemble, Teacher
+from teacher_ensemble import *
 
 colors = plt.rcParams["axes.prop_cycle"].by_key()['color']
 color_index = 0
@@ -30,10 +28,8 @@ nb_fair_tchrs = int(sys.argv[2]) # wished
 # creating teachers
 tchrs_ensemble = Ensemble(nb_teachers, nb_fair_tchrs) 
 # prepare datasets !
-#subsets, S = get(dataset, nb_teachers, nb_fair_tchrs=nb_fair_tchrs)
 
-# train teachers
-#tchrs_ensemble.parallel_training()
+# teachers
 update_teachers(tchrs_ensemble.tchrs)
 
 accuracies, eod, spd, rec = [], [], [], []
@@ -49,7 +45,7 @@ name = dataset + "_" + str(nb_fair_tchrs) + "_fair"+ ".png"
 # load student dataset
 (x_train, x_test, y_train, y_test, s_train, s_test) = load_student_data("AK")
 
-""" labels, spd_ws = spd_aggregator(x_train, group=s_train)
+labels, spd_ws = spd_aggregator(x_train, group=s_train)
 print(eod)
 print("nb of 0 in labels = ", np.count_nonzero(labels == 0), end="\n#################################\n")
 print(spd_ws, end="\n#########\n")
@@ -59,7 +55,7 @@ print(spd_ws, end="\n#########\n")
 labels, ws = fair_fed_agg(x_train)
 print("nb of 0 in labels = ", np.count_nonzero(labels == 0), end="\n#################################\n")
 print(ws)
-exit(1) """
+exit(1)
 
 confs = ["All", "Only fair", "Only unfair"]
 
@@ -101,7 +97,7 @@ for cf in confs:
     ev1, ev2 = eval_student_model(st_model, x_test, y_test, yhat_test, verbose=False)
     st_stats = fairness(st_model, x_test, yhat_test, s_test)
     stats[cf] = [ev1[1], ev2[1], st_stats["EOD"]]
-    ax2.bar([x], 4*consensus, width = b_width, color="red")
+    ax2.bar([x], consensus, width = b_width, color="red")
     color_index += 1
 
 x=1
@@ -124,7 +120,7 @@ st_stats = fairness(st_model, x_test, yhat_test, s_test)
 ev1, ev2 = eval_student_model(st_model, x_test, y_test, yhat_test, verbose=False)
 stat = [ev1[1], ev2[1], st_stats["EOD"]]
 ax3.bar([x], stat, width = b_width, color=["#fcba03", "#8c6908", "green"],  label=["ACC-Labeled data", "ACC - True labels", "EOD"], hatch=["", "", "/"])
-ax2.bar([x], 4*consensus, width = b_width, color="red", label="consensus")
+ax2.bar([x], consensus, width = b_width, color="red", label="consensus")
 x += 3*b_width/2
 
 # ###############

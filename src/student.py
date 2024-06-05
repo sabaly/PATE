@@ -1,7 +1,6 @@
 import tensorflow as tf
-from data_loader import *
-import numpy as np
-from aggregator import *
+from folktables import ACSDataSource, ACSEmployment
+from sklearn.model_selection import train_test_split
 
 
 def define_model(input_shape):
@@ -49,4 +48,11 @@ def eval_student_model(model, x_test, true_y_test, y_test, verbose=True):
     return eval1, eval2
     
 
-
+def load_student_data(state, year=2018, horizon="1-Year"):
+    data_src = ACSDataSource(survey_year=year, horizon=horizon, survey="person")
+    acs_data = data_src.get_data(states=[state], download=True)
+    features, labels, group = ACSEmployment.df_to_numpy(acs_data)
+    x_train, x_test, y_train, y_test, s_train, s_test = train_test_split(
+            features, labels, group, test_size=0.2, random_state=0
+        )
+    return (x_train, x_test, y_train, y_test, s_train, s_test)

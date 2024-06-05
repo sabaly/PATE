@@ -1,4 +1,6 @@
 checkpoint/
 src/data/
+src/app.py
+src/data_load.py
 #img/
 src/tmp.py

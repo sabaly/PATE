@@ -1,6 +1,6 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-from data_loader import *
+#from data_loader import *
 from analysis import fairness, mean
 import tensorflow as tf
 import pandas as pd
@@ -8,6 +8,14 @@ import multiprocessing as mp
 from multiprocessing import Pool
 import pickle
 from random import choice
+from folktables import ACSDataSource, ACSEmployment
+
+states = ["HI", "CA", "PR", "NV", "NM", "OK", "NY", "WA", "AZ",  "MD",
+"TX", "VA", "MA", "GA", "CT", "OR", "IL", "RI", "NC", "CO", "DE", "LA", "UT",
+"FL", "MS", "SC", "AR", "SD", "AL", "MI", "KS", "ID", "MN", "MT", "OH", "IN",
+"TN", "PA", "NE", "MO", "WY", "ND", "WI", "KY", "NH", "ME", "IA", "VT", "WV"]
+
+data_src = ACSDataSource(survey_year="2018", horizon="1-Year", survey="person")
 
 class Teacher:
     def __init__(self, id: int, fair=True):
@@ -137,6 +145,10 @@ class Ensemble:
     def get_teachers(self):
         cpy_states = [x for x in states]
         root = "../checkpoint/"
+        ind_min = 0
+        nb_tchr_pr_grp = self.nb_tchrs // 4
+        nb_tchr_grp = 0
+        cpy_states = [x for x in states[ind_min:ind_min+12]]
         for _ in range(self.nb_fair):
             st = choice(cpy_states)
             cpy_states.pop(cpy_states.index(st))
@@ -146,7 +158,16 @@ class Ensemble:
             self.tchrs.append(tchr)
             if cpy_states == []: # model !
                 cpy_states = [x for x in states]
-
+            nb_tchr_grp += 1
+            if nb_tchr_grp == nb_tchr_pr_grp:
+                ind_min += 12
+                nb_tchr_grp = 0
+                if ind_min >= 47:
+                    ind_min = 0
+                    cpy_states = [x for x in states]
+                else:
+                    cpy_states = [x for x in states[ind_min:ind_min+12]]
+            
         cpy_states = [x for x in states]
         for _ in range(self.nb_tchrs - self.nb_fair):
             st = choice(cpy_states)

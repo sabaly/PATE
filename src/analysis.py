@@ -1,6 +1,7 @@
 import numpy as np
 import math
 
+
 def mean(myarray):
     mn = np.mean(myarray)
     return 0 if math.isnan(mn) else mn
@@ -37,5 +38,6 @@ def stats(nb_teachers, teachers, subsets, S):
         spd.append(stat["SPD"])
         rec.append(stat["REC"])
     return accuracies, eod, spd, rec
-
+    
+    
 

@@ -1,5 +1,5 @@
-import sys
-from teachers import *
+import sys, os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 from student import *
 from aggregator import *
 #import matplotlib as mpl
@@ -67,7 +67,7 @@ def train_students(nb_teachers, nb_fair_tchrs):
 
 def wrapper(args):
     return train_students(*args)
-for nb_teachers in [70]:
+for nb_teachers in [5, 10, 30]:
     fig, ((ax1,ax2,ax3), (ax4,ax5,ax6)) = plt.subplots(2,3, sharey=True)
     st_fairness = {}
     print(">>> ", nb_teachers, " teachers ")
