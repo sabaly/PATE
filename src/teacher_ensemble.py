@@ -1,6 +1,6 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-#from data_loader import *
+from sklearn.model_selection import train_test_split
 from analysis import fairness, mean
 import tensorflow as tf
 import pandas as pd
@@ -9,13 +9,16 @@ from multiprocessing import Pool
 import pickle
 from random import choice
 from folktables import ACSDataSource, ACSEmployment
+import numpy as np
 
 states = ["HI", "CA", "PR", "NV", "NM", "OK", "NY", "WA", "AZ",  "MD",
 "TX", "VA", "MA", "GA", "CT", "OR", "IL", "RI", "NC", "CO", "DE", "LA", "UT",
-"FL", "MS", "SC", "AR", "SD", "AL", "MI", "KS", "ID", "MN", "MT", "OH", "IN",
-"TN", "PA", "NE", "MO", "WY", "ND", "WI", "KY", "NH", "ME", "IA", "VT", "WV"]
+"FL", "MS", "SC", "AR", "SD", "AL", "MI", "KS", "ID", "MN", "TN", "OH", "IN",
+"MT", "PA", "NE", "MO", "WY", "ND", "WI", "KY", "NH", "ME", "IA", "VT", "WV"] 
 
 data_src = ACSDataSource(survey_year="2018", horizon="1-Year", survey="person")
+alphas = [[100, 100]]*(len(states) - 1)
+alphas[9] = [100,180]
 
 class Teacher:
     def __init__(self, id: int, fair=True):

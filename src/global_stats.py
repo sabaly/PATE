@@ -2,10 +2,8 @@ import sys, os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 from student import *
 from aggregator import *
-#import matplotlib as mpl
 import matplotlib.pyplot as plt
 from analysis import *
-import warnings
 from teacher_ensemble import *
 from multiprocessing import Pool
 
@@ -13,12 +11,6 @@ from multiprocessing import Pool
 colors = plt.rcParams["axes.prop_cycle"].by_key()['color']
 color_index = 0
 
-def fxn():
-    warnings.warn("deprecated", DeprecationWarning)
-
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    fxn()
 
 def get_agg(cf):
     if cf == "All":
@@ -27,21 +19,16 @@ def get_agg(cf):
         aggregator = only_fair
     elif cf == "Only unfair":
         aggregator = only_unfair
-    elif cf == "Weighed vote":
+    elif cf == "WV0":
         aggregator = weighed_vote
     elif cf == "Fairfed":
         aggregator = fair_fed_agg
-    elif cf == "Methode1":
+    elif cf == "WV1":
         aggregator = spd_aggregator
-    elif cf == "Methode2":
+    elif cf == "WV2":
         aggregator = methode_2
     
     return aggregator
-dataset = "acsemployment_bis"
-# student data
-(x_train, x_test, y_train, y_test, s_train, s_test) = load_student_data("AK")
-
-conf = ["All", "Only fair", "Only unfair", "Weighed vote", "Fairfed", "Methode1", "Methode2"]
 
 def train_students(nb_teachers, nb_fair_tchrs):
     loc_st_fairnesse = {}
@@ -68,17 +55,33 @@ def train_students(nb_teachers, nb_fair_tchrs):
 
 def wrapper(args):
     return train_students(*args)
-for nb_teachers in [50]:
+
+parallel = 1
+if len(sys.argv) > 1:
+    parallel = int(sys.argv[1])
+dataset = "acsemployment_bis"
+# student data
+(x_train, x_test, y_train, y_test, s_train, s_test) = load_student_data("AK")
+
+conf = ["All", "Only fair", "Only unfair", "WV0", "Fairfed", "WV1", "WV2"]
+
+for nb_teachers in [15]:
     fig, ((ax1,ax2,ax3), (ax4,ax5,ax6)) = plt.subplots(2,3, sharey=True)
     st_fairness = {}
     print(">>> ", nb_teachers, " teachers ")
-    with Pool(5) as p:
-        loc_st_fairnesses = p.map(wrapper, [(nb_teachers, i) for i in range(1, nb_teachers)])
-        p.close()
+    loc_st_fairnesses = []
+    if not parallel:
+        for i in range(1, nb_teachers):
+            loc_st_fairnesses.append(train_students(nb_teachers, i))
+    else:
+        with Pool(5) as p:
+            loc_st_fairnesses = p.map(wrapper, [(nb_teachers, i) for i in range(1, nb_teachers)])
+            p.close()
     
     for cf in conf:
         st_fairness[cf] = sum([l_st_f[cf] for l_st_f in loc_st_fairnesses], [])
     color_index = 1
+
     for cf in conf:
         if cf == "All":
            continue
@@ -88,16 +91,16 @@ for nb_teachers in [50]:
         elif cf == "Only unfair":
            ax2.plot(list(range(1, nb_teachers)), st_fairness[cf], color=colors[color_index], label=cf)
            ax2.plot(list(range(1, nb_teachers)), st_fairness["All"], color=colors[0])
-        elif cf == "Weighed vote":
+        elif cf == "WV0":
            ax3.plot(list(range(1, nb_teachers)), st_fairness[cf], color=colors[color_index], label=cf)
            ax3.plot(list(range(1, nb_teachers)), st_fairness["All"], color=colors[0])
         elif cf == "Fairfed":
            ax4.plot(list(range(1, nb_teachers)), st_fairness[cf], color=colors[color_index], label=cf)
            ax4.plot(list(range(1, nb_teachers)), st_fairness["All"], color=colors[0])
-        elif cf == "Methode1":
+        elif cf == "WV1":
            ax5.plot(list(range(1, nb_teachers)), st_fairness[cf], color=colors[color_index], label=cf)
            ax5.plot(list(range(1, nb_teachers)), st_fairness["All"], color=colors[0])
-        elif cf == "Methode2":
+        elif cf == "WV2":
            ax6.plot(list(range(1, nb_teachers)), st_fairness[cf], color=colors[color_index], label=cf)
            ax6.plot(list(range(1, nb_teachers)), st_fairness["All"], color=colors[0], label="All")
 
