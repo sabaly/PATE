@@ -137,7 +137,7 @@ class Ensemble:
         print("Training Teachers...")
         with Pool(mp.cpu_count()) as p:
             fi = p.map(self.wrapper, self.tchrs)
-
+            p.close()
         self.tchrs = fi
         self.update_m()
 

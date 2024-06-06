@@ -45,7 +45,7 @@ name = dataset + "_" + str(nb_fair_tchrs) + "_fair"+ ".png"
 # load student dataset
 (x_train, x_test, y_train, y_test, s_train, s_test) = load_student_data("AK")
 
-labels, spd_ws = spd_aggregator(x_train, group=s_train)
+""" labels, spd_ws = spd_aggregator(x_train, group=s_train)
 print(eod)
 print("nb of 0 in labels = ", np.count_nonzero(labels == 0), end="\n#################################\n")
 print(spd_ws, end="\n#########\n")
@@ -55,9 +55,9 @@ print(spd_ws, end="\n#########\n")
 labels, ws = fair_fed_agg(x_train)
 print("nb of 0 in labels = ", np.count_nonzero(labels == 0), end="\n#################################\n")
 print(ws)
-exit(1)
+exit(1) """
 
-confs = ["All", "Only fair", "Only unfair"]
+
 
 fig, (ax1, ax2, ax3)= plt.subplots(1, 3, sharey=True)
 b_width = 0.3
@@ -73,8 +73,57 @@ ax1.set_xlabel("Teachers")
 ax1.set_ylabel("Metrics")
 
 xticks = ["all", "f", "uf", "wv"]
+methods = ["All", "Only fair", "Only unfair", "M0", "Fairfed", "M2", "M3"]
+axis = {methods[i]: 1 + i*3*b_width/2 for i in range(len(methods))}
 stats = {}
-for cf in confs:
+
+def wrapper(args):
+    return get_stats(*args)
+
+def get_stats(cf, ax2, ax3):
+    print(f"method : {cf}")
+    stats = {}
+    if cf in ["Only fair", "Only unfair"] and (nb_fair_tchrs == 0 or nb_fair_tchrs == nb_teachers):
+        stats[cf] = []
+    if cf == "All":
+        aggregator = plurality
+    elif cf == "Only fair":
+        aggregator = only_fair
+    elif cf == "Only unfair":
+        aggregator = only_unfair
+    elif cf == "M0":
+        aggregator = weighed_vote
+    elif cf == "Fairfed":
+        aggregator = fair_fed_agg
+    elif cf == "M1":
+        aggregator = spd_aggregator
+    else:
+        aggregator = methode_2
+    
+    y_train, _= aggregator(x_train, group=s_train)
+    yhat_test, consensus = aggregator(x_test, group=s_test)
+
+    st_model = train_student(x_train, y_train, verbose=False)
+    ev1, ev2 = eval_student_model(st_model, x_test, y_test, yhat_test, verbose=False)
+    st_stats = fairness(st_model, x_test, yhat_test, s_test)
+    stat = [ev1[1], ev2[1], st_stats["EOD"]]
+    x = axis[cf]
+    if cf in ["All", "Only fair", "Only unfair"]:
+        if cf == "All":
+            ax2.bar([x], consensus, width = b_width, color="red", label="consensus")
+        else:
+            ax2.bar([x], consensus, width = b_width, color="red")
+    if cf == "All":
+        ax3.bar([x], stat, width = b_width, color=["#fcba03", "#8c6908", "green"], bottom=[0,0,0], hatch=["", "", "//"])
+    else:
+        ax3.bar([x], stat, width = b_width, color=["#fcba03", "#8c6908", "green"], label=["ACC-Labeled data", "ACC - True labels", "EOD"], bottom=[0,0,0], hatch=["", "", "//"])
+
+with Pool(5) as p:
+    p.map(wrapper, [(cf, ax2, ax3) for cf in methods])
+p.close()
+
+""" 
+for cf in methods:
     # setting conf
     if cf != "All" and (nb_fair_tchrs == 0 or nb_fair_tchrs == nb_teachers):
         x += 3*b_width
@@ -164,6 +213,7 @@ stat = [ev1[1], ev2[1], st_stats["EOD"]]
 ax3.bar([x], stat, width = b_width, color=["#fcba03", "#8c6908", "green"], hatch=["", "", "/"])
 
 
+ """
 ax3_xtick = xticks + ["ff", "M1", "M2"]
 ax3.set_xticks([1 + i*3*b_width/2 for i in range(len(ax3_xtick))], ax3_xtick) 
 ax2.set_xticks([1 + i*3*b_width/2 for i in range(len(xticks))], xticks) 

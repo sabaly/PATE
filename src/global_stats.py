@@ -6,7 +6,8 @@ from aggregator import *
 import matplotlib.pyplot as plt
 from analysis import *
 import warnings
-from teacher_ensemble import Ensemble, Teacher
+from teacher_ensemble import *
+from multiprocessing import Pool
 
 
 colors = plt.rcParams["axes.prop_cycle"].by_key()['color']
@@ -67,12 +68,13 @@ def train_students(nb_teachers, nb_fair_tchrs):
 
 def wrapper(args):
     return train_students(*args)
-for nb_teachers in [5, 10, 30]:
+for nb_teachers in [50]:
     fig, ((ax1,ax2,ax3), (ax4,ax5,ax6)) = plt.subplots(2,3, sharey=True)
     st_fairness = {}
     print(">>> ", nb_teachers, " teachers ")
     with Pool(5) as p:
         loc_st_fairnesses = p.map(wrapper, [(nb_teachers, i) for i in range(1, nb_teachers)])
+        p.close()
     
     for cf in conf:
         st_fairness[cf] = sum([l_st_f[cf] for l_st_f in loc_st_fairnesses], [])
