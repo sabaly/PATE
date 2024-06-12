@@ -67,7 +67,7 @@ def wrapper(args):
     return train_students(*args)
 
 
-for nb_teachers in [15, 20, 25]:
+for nb_teachers in [30]:
     fig, ((ax1,ax2,ax3), (ax4,ax5,ax6)) = plt.subplots(2,3, sharey=True)
     st_fairness = {}
     print(">>> ", nb_teachers, " teachers ")
