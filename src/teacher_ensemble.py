@@ -7,7 +7,7 @@ import pandas as pd
 import multiprocessing as mp
 from multiprocessing import Pool
 import pickle
-from random import choice
+from random import choice, seed
 from folktables import ACSDataSource, ACSEmployment
 import numpy as np
 
@@ -56,15 +56,16 @@ class Teacher:
     
     def get_dataset(self):
         df = data_src.get_data(states=[states[self.tchr_id]], download=True)
+        df[ACSEmployment.group] = [2 if x!= 1 else 1 for x in df[ACSEmployment.group]]
         features, labels, group = ACSEmployment.df_to_numpy(df)
         if not self.status: 
             df = pd.DataFrame(features)
             df.columns = ACSEmployment.features
             df[ACSEmployment.target] = labels
 
-            p_grp_pr = df[(df["RAC1P"] == 1) & (df["ESR"] == True)]
-            up_grp_pr = df[(df["RAC1P"] == 2) & (df["ESR"] == True)]
-            rest_of_df = df[((df["RAC1P"] != 1) & (df["RAC1P"] != 2)) | (df["ESR"] == False)]
+            p_grp_pr = df[(df[ACSEmployment.group] == 1) & (df[ACSEmployment.target] == True)]
+            up_grp_pr = df[(df[ACSEmployment.group] == 2) & (df[ACSEmployment.target] == True)]
+            rest_of_df = df[((df[ACSEmployment.group] != 1) & (df[ACSEmployment.group] != 2)) | (df[ACSEmployment.target] == False)]
             p_vs_up = pd.concat([p_grp_pr, up_grp_pr])
 
             alpha = alphas[states.index(states[self.tchr_id])]
@@ -76,9 +77,9 @@ class Teacher:
             up_grp = up_grp_pr.sample(size_up_grp, replace=True)
             final_df = pd.concat([p_grp, up_grp, rest_of_df])
 
-            labels = np.array(final_df.pop("ESR"))
+            labels = np.array(final_df.pop(ACSEmployment.target))
             features = final_df.copy()
-            group = final_df["RAC1P"]
+            group = final_df[ACSEmployment.group]
 
         return features, labels, group
 
@@ -151,6 +152,7 @@ class Ensemble:
         ind_min = 0
         nb_tchr_pr_grp = self.nb_tchrs // 4
         nb_tchr_grp = 0
+        seed(self.nb_tchrs + self.nb_fair)
         cpy_states = [x for x in states[ind_min:ind_min+12]]
         for _ in range(self.nb_fair):
             st = choice(cpy_states)
@@ -170,7 +172,7 @@ class Ensemble:
                     cpy_states = [x for x in states]
                 else:
                     cpy_states = [x for x in states[ind_min:ind_min+12]]
-            
+
         cpy_states = [x for x in states]
         for _ in range(self.nb_tchrs - self.nb_fair):
             st = choice(cpy_states)

@@ -6,12 +6,12 @@ def mean(myarray):
     mn = np.mean(myarray)
     return 0 if math.isnan(mn) else mn
 
-def fairness(model, x_test, y_test, group_test):
-    yhat = np.round(model.predict(x_test))
+def fairness(model, x_test, y_test, group_test, true_y_test=[]):
     ev = model.evaluate(x_test, y_test)
     acc = float(format(ev[1], "0.4f"))
     rec = float(format(ev[2], ".4f"))
 
+    yhat = np.round(model.predict(x_test))
     p_grp_tpr = mean(yhat[(y_test == 1) & (group_test == 1)])
     up_grp_tpr = mean(yhat[(y_test == 1) & (group_test == 2)])
     
@@ -23,7 +23,14 @@ def fairness(model, x_test, y_test, group_test):
     up_grp = mean(yhat[(group_test == 2)])
     spd = float(format(abs(p_grp - up_grp), ".4f"))
 
-    return {"EOD": eod, "SPD": spd, "ACC": acc, "REC": rec}
+    if true_y_test != []:
+        ev = model.evaluate(x_test, true_y_test)
+        acc_tl = float(format(ev[1], "0.4f"))
+        rec_tl = float(format(ev[2], ".4f"))
+    else:
+        rec_tl = acc_tl = '-'
+
+    return {"EOD": eod, "SPD": spd, "ACC": acc, "REC": rec, "ACC_TL": acc_tl, "REC_TL": rec_tl}
 
 def stats(nb_teachers, teachers, subsets, S):
     accuracies = []

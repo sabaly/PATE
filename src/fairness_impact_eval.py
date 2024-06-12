@@ -72,18 +72,18 @@ ax1.set_ylim([0,1.1])
 ax1.set_xlabel("Teachers")
 ax1.set_ylabel("Metrics")
 
-xticks = ["all", "f", "uf", "w0"]
-methods = ["All", "Only fair", "Only unfair"]
+xticks = ["normal", "f", "uf", "w0"]
+methods = ["Normal", "Only fair", "Only unfair"]
 axis = {methods[i]: 1 + i*3*b_width/2 for i in range(len(methods))}
 stats = {}
 
 for cf in methods:
     # setting conf
-    if cf != "All" and (nb_fair_tchrs == 0 or nb_fair_tchrs == nb_teachers):
+    if cf != "Normal" and (nb_fair_tchrs == 0 or nb_fair_tchrs == nb_teachers):
         x += 3*b_width
         break
     print(f'{cf} teachers')
-    if cf == "All":
+    if cf == "Normal":
         aggregator = plurality
         x = 1
     elif cf == "Only fair":
