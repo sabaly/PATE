@@ -117,10 +117,11 @@ class Teacher:
         self.local_m = (b-a)*self.nk/sum_n
     
 class Ensemble:
-    def __init__(self, nb_teachers, nb_fair_tchrs=-1) -> None:
+    def __init__(self, nb_teachers, nb_fair_tchrs=-1, criteria=0) -> None:
         self.nb_fair = nb_fair_tchrs
         self.nb_tchrs = nb_teachers
         self.tchrs = []
+        self.criteria = criteria
         self.get_teachers()
            
         self.S = pd.concat([t.local_s for t in self.tchrs])
@@ -148,16 +149,21 @@ class Ensemble:
 
     def get_teachers(self):
         cpy_states = [x for x in states]
-        root = "../checkpoint/"
+        if self.criteria:
+            root = "../checkpoint/"
+        else:
+            root = "../checkpoint_0/"
         ind_min = 0
         nb_tchr_pr_grp = self.nb_tchrs // 4
         nb_tchr_grp = 0
         seed(self.nb_tchrs + self.nb_fair)
         cpy_states = [x for x in states[ind_min:ind_min+12]]
+        
         for _ in range(self.nb_fair):
             st = choice(cpy_states)
             cpy_states.pop(cpy_states.index(st))
             path = root + st + "/" + st  + "_fair.pkl"
+            #print(path)
             with open(path, "rb") as f:
                 tchr = pickle.load(f)
             self.tchrs.append(tchr)
@@ -173,6 +179,7 @@ class Ensemble:
                 else:
                     cpy_states = [x for x in states[ind_min:ind_min+12]]
 
+        #print("HERE ! ", root)
         cpy_states = [x for x in states]
         for _ in range(self.nb_tchrs - self.nb_fair):
             st = choice(cpy_states)
@@ -183,6 +190,7 @@ class Ensemble:
             self.tchrs.append(tchr)
             if cpy_states == []: # model !
                 cpy_states = [x for x in states]
+        
         
 
 
