@@ -1,5 +1,4 @@
-checkpoint/
-checkpoint_0/
+checkpoint*/
 src/data/
 src/app.py
 src/data_load.py

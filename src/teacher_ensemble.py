@@ -117,11 +117,10 @@ class Teacher:
         self.local_m = (b-a)*self.nk/sum_n
     
 class Ensemble:
-    def __init__(self, nb_teachers, nb_fair_tchrs=-1, criteria=0) -> None:
+    def __init__(self, nb_teachers, nb_fair_tchrs=-1) -> None:
         self.nb_fair = nb_fair_tchrs
         self.nb_tchrs = nb_teachers
         self.tchrs = []
-        self.criteria = criteria
         self.get_teachers()
            
         self.S = pd.concat([t.local_s for t in self.tchrs])
@@ -149,10 +148,7 @@ class Ensemble:
 
     def get_teachers(self):
         cpy_states = [x for x in states]
-        if self.criteria:
-            root = "../checkpoint/"
-        else:
-            root = "../checkpoint_0/"
+        root = "../checkpoint_sex/"
         ind_min = 0
         nb_tchr_pr_grp = self.nb_tchrs // 4
         nb_tchr_grp = 0
