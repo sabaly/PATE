@@ -140,7 +140,6 @@ def computes_weigh(teachers, beta=1, gamma=100):
         nk = tchr.splited_data[1].shape[0]
         sum_ni += nk
     fg = abs(fg)
-
     ws = [0]*len(teachers)
     for i in range(len(teachers)):
         nk = teachers[i].splited_data[1].shape[0]

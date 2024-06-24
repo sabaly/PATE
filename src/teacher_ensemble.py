@@ -99,21 +99,31 @@ class Teacher:
 
         self.metrics = fairness(self.model, x_test, y_test, s_test)
     
-    def update_local_m(self, S, sum_n):
+    def update_local_m(self, S, sum_n, seen=False):
         _, x_test, _, y_test, _, s_test = self.splited_data
         yhat = np.round(self.model.predict(x_test))
         p_tp = mean(yhat[(s_test == 1) & (y_test==1)])
         up_tp = mean(yhat[(s_test==2) & (y_test==1)])
-        p_plabels = S[(S["ID"] == self.tchr_id)]["P_PLBLS"]
-        up_plabels = S[(S["ID"] == self.tchr_id)]["UP_PLBLS"]
-        others_p_plabels = sum(S[(S["ID"] != self.tchr_id)]["P_PLBLS"])
-        others_up_plabels = sum(S[(S["ID"] != self.tchr_id)]["UP_PLBLS"])
+        p_plabels = S[(S["ID"] == self.tchr_id)]["P_PLBLS"][0]
+        up_plabels = S[(S["ID"] == self.tchr_id)]["UP_PLBLS"][0]
+        others_p_plabels = sum(S["P_PLBLS"]) - p_plabels
+        others_up_plabels = sum(S["UP_PLBLS"]) - up_plabels
 
         a = p_tp*p_plabels/others_p_plabels
         b = up_tp*up_plabels/others_up_plabels
 
         self.nk = x_test.shape[0]
 
+        if not isinstance(a, float):
+            a.index = [0,1]
+            b.index = [0,1]
+            if seen:
+                a = a[1]
+                b = b[1]
+            else:
+                a = a[0]
+                b = b[0]
+                
         self.local_m = (b-a)*self.nk/sum_n
     
 class Ensemble:
@@ -122,8 +132,9 @@ class Ensemble:
         self.nb_tchrs = nb_teachers
         self.tchrs = []
         self.get_teachers()
-           
+        
         self.S = pd.concat([t.local_s for t in self.tchrs])
+        self.update_m()
         
     def wrapper(self, teacher):
         teacher.train_model()
@@ -134,8 +145,13 @@ class Ensemble:
         sum_n = 0
         for i in range(len(self.tchrs)):
             sum_n += self.tchrs[i].splited_data[1].shape[0]
+        seen = []
         for i in range(len(self.tchrs)):
-            self.tchrs[i].update_local_m(self.S, sum_n)
+            if self.tchrs[i].tchr_id in seen:
+                self.tchrs[i].update_local_m(self.S, sum_n, True)
+            else:
+                self.tchrs[i].update_local_m(self.S, sum_n)
+                seen.append(self.tchrs[i].tchr_id)
 
     def parallel_training(self):
         print("Training Teachers...")
@@ -144,7 +160,6 @@ class Ensemble:
             p.close()
         self.tchrs = fi
         self.update_m()
-
 
     def get_teachers(self):
         cpy_states = [x for x in states]
