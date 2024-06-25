@@ -17,11 +17,13 @@ if len(sys.argv) > 1:
     parallel = int(sys.argv[1])
 dataset = "acsemployment_bis"
 
-(x_train, x_test, y_train, y_test, s_train, s_test) = load_student_data("AK")
+(x_train, x_test, y_train, y_test, s_train, s_test) = load_student_data("AK", attr="sex")
 
 st_model = train_student(x_train, y_train, verbose=False)
 stats = fairness(st_model, x_test, y_test, s_test)
 print(stats)
+#print(s_train)
+
 #np.save("tmp/" + "_st_init_stats.npy", stats)
 
 conf = ["Normal", "Only fair", "Only unfair", "WV0", "Fairfed", "WV1", "WV2"]
@@ -53,10 +55,11 @@ def train_students(nb_teachers, nb_fair_tchrs):
     tchrs_ensemble = Ensemble(nb_teachers, nb_fair_tchrs)
     update_teachers(tchrs_ensemble.tchrs)
     
-    eod = []
+    metric = []
+    metric_key = "SPD"
     for tchrs in tchrs_ensemble.tchrs:
-        eod.append(tchrs.metrics["EOD"])
-    set_metrics(eod)
+        metric.append(tchrs.metrics[metric_key])
+    set_metrics(metric)
 
     for cf in conf:
         print(f'>>> case : {cf}')
@@ -65,14 +68,14 @@ def train_students(nb_teachers, nb_fair_tchrs):
         yhat_test, _ = aggregator(x_test, group=s_test)
         st_model = train_student(x_train, y_train, verbose=False)
         st_stats = fairness(st_model, x_test, yhat_test, s_test)
-        loc_st_fairnesse[cf].append(st_stats["EOD"])
+        loc_st_fairnesse[cf].append(st_stats[metric_key])
     return loc_st_fairnesse
 
 def wrapper(args):
     return train_students(*args)
 
 
-for nb_teachers in [15]:
+for nb_teachers in [5]:
     fig, ((ax1,ax2,ax3), (ax4,ax5,ax6)) = plt.subplots(2,3, sharey=True)
     st_fairness = {}
     print(">>> ", nb_teachers, " teachers ")
@@ -116,7 +119,7 @@ for nb_teachers in [15]:
     ax1.set_ylabel("Student fairness")
     ax5.set_xlabel("Number of fair teachers")
     path = "../img/archive_"+ str(nb_teachers) + "/"
-    plt.savefig(path + str(j) + "_st_fairness_variations_" + str(nb_teachers) + "_teachers.png")
+    plt.savefig(path + "st_fairness_variations_" + str(nb_teachers) + "_teachers.png")
     
     np.save(path + "st_fairness.npy", st_fairness)
     # np.load = lambda *a,**k: np_load_old(*a, allow_pickle=True, **k)

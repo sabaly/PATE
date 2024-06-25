@@ -166,15 +166,16 @@ def fair_fed_agg(data_to_label, group=[], voters=[], fairness=fairness_metrics):
 
     # computes weighs
     weighs = computes_weigh(voters)
-
+	
     labels = []
     for x in range(np.shape(preds)[1]):
         pred = list(preds[:,x])
         for i in range(len(pred)):
-            if fairness[i] < 0.1:
-                pred = pred + [pred[i]]*weighs[i]
+            pred = pred + [pred[i]]*weighs[i]
         n_y_x = np.bincount(pred)
         labels.append(np.argmax(n_y_x))
+    print(">>> ", weighs)
+    print(labels[:100])
     return np.asarray(labels), weighs
 
 # ######################

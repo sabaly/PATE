@@ -1,5 +1,5 @@
 import tensorflow as tf
-from folktables import ACSDataSource, ACSEmployment
+from folktables import ACSDataSource, ACSEmployment, BasicProblem, employment_filter
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -50,37 +50,59 @@ def eval_student_model(model, x_test, true_y_test, y_test, verbose=True):
     return eval1, eval2
     
 
-def load_student_data(state, year=2018, horizon="1-Year", alpha=[], conf=0):
+def load_student_data(state, year=2018, horizon="1-Year", attr="sex", alpha=[], conf=0):
     if alpha == []:
-        return load_b_student_data(state, year, horizon, conf)
+        return load_b_student_data(state, year, horizon, attr, conf)
     else:
-        return load_unb_student_data(state, year, horizon, alpha, conf)
+        return load_unb_student_data(state, year, horizon, attr, alpha, conf)
 
-
-def load_b_student_data(state, year=2018, horizon="1-Year", conf=0):
+def load_b_student_data(state, year=2018, horizon="1-Year", attr="sex", conf=0):
     data_src = ACSDataSource(survey_year=year, horizon=horizon, survey="person")
     acs_data = data_src.get_data(states=[state], download=True)
+    MyACSEMployment = ACSEmployment
+    if attr=="sex":
+        ACSEmploymentNew = BasicProblem(
+            features = ACSEmployment.features,
+            target = ACSEmployment.target,
+            target_transform=ACSEmployment.target_transform,
+            group = "SEX",
+            preprocess=employment_filter,
+            postprocess=lambda x: np.nan_to_num(x, -1)
+        )
+        MyACSEMployment = ACSEmploymentNew
+
     if conf: # with/others
-        acs_data[ACSEmployment.group] = [2 if x!=1 else 1 for x in acs_data[ACSEmployment.group]]
-    features, labels, group = ACSEmployment.df_to_numpy(acs_data)
+        acs_data[MyACSEMployment.group] = [2 if x!=1 else 1 for x in acs_data[MyACSEMployment.group]]
+    features, labels, group = MyACSEMployment.df_to_numpy(acs_data)
     x_train, x_test, y_train, y_test, s_train, s_test = train_test_split(
             features, labels, group, test_size=0.2, random_state=0
         )
     return (x_train, x_test, y_train, y_test, s_train, s_test)
 
-def load_unb_student_data(state, year=2018, horizon="1-Year", alpha=[100,100], conf=0):
+def load_unb_student_data(state, year=2018, horizon="1-Year", attr = "sex", alpha=[100,100], conf=0):
     data_src = ACSDataSource(survey_year=year, horizon=horizon, survey="person")
     acs_data = data_src.get_data(states=[state], download=True)
+    MyACSEMployment = ACSEmployment
+    if attr == "sex":
+        ACSEmploymentNew = BasicProblem(
+            features = ACSEmployment.features,
+            target = ACSEmployment.target,
+            target_transform=ACSEmployment.target_transform,
+            group = "SEX",
+            preprocess=employment_filter,
+            postprocess=lambda x: np.nan_to_num(x, -1)
+        )
+        MyACSEMployment = ACSEmploymentNew
     if conf: # with/others
-        acs_data[ACSEmployment.group] = [2 if x!=1 else 1 for x in acs_data[ACSEmployment.group]]
-    features, labels, group = ACSEmployment.df_to_numpy(acs_data)
+        acs_data[MyACSEMployment.group] = [2 if x!=1 else 1 for x in acs_data[MyACSEMployment.group]]
+    features, labels, group = MyACSEMployment.df_to_numpy(acs_data)
     df = pd.DataFrame(features)
-    df.columns = ACSEmployment.features
-    df[ACSEmployment.target] = labels
+    df.columns = MyACSEMployment.features
+    df[MyACSEMployment.target] = labels
 
-    p_grp_pr = df[(df[ACSEmployment.group] == 1) & (df[ACSEmployment.target] == True)]
-    up_grp_pr = df[(df[ACSEmployment.group] == 2) & (df[ACSEmployment.target] == True)]
-    rest_of_df = df[((df[ACSEmployment.group] != 1) & (df[ACSEmployment.group] != 2)) | (df[ACSEmployment.target] == False)]
+    p_grp_pr = df[(df[MyACSEMployment.group] == 1) & (df[MyACSEMployment.target] == True)]
+    up_grp_pr = df[(df[MyACSEMployment.group] == 2) & (df[MyACSEMployment.target] == True)]
+    rest_of_df = df[((df[MyACSEMployment.group] != 1) & (df[MyACSEMployment.group] != 2)) | (df[MyACSEMployment.target] == False)]
     p_vs_up = pd.concat([p_grp_pr, up_grp_pr])
 
     dist = np.random.dirichlet(alpha, 1)
@@ -91,9 +113,9 @@ def load_unb_student_data(state, year=2018, horizon="1-Year", alpha=[100,100], c
     up_grp = up_grp_pr.sample(size_up_grp, replace=True)
     final_df = pd.concat([p_grp, up_grp, rest_of_df])
 
-    labels = np.array(final_df.pop(ACSEmployment.target))
+    labels = np.array(final_df.pop(MyACSEMployment.target))
     features = np.asarray(final_df.copy())
-    group = np.asarray(final_df[ACSEmployment.group])
+    group = np.asarray(final_df[MyACSEMployment.group])
 
     x_train, x_test, y_train, y_test, s_train, s_test = train_test_split(
             features, labels, group, test_size=0.2, random_state=0

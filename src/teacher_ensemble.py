@@ -174,7 +174,7 @@ class Ensemble:
             st = choice(cpy_states)
             cpy_states.pop(cpy_states.index(st))
             path = root + st + "/" + st  + "_fair.pkl"
-            #print(path)
+            print(path)
             with open(path, "rb") as f:
                 tchr = pickle.load(f)
             self.tchrs.append(tchr)
@@ -190,7 +190,7 @@ class Ensemble:
                 else:
                     cpy_states = [x for x in states[ind_min:ind_min+12]]
 
-        #print("HERE ! ", root)
+        print("HERE ! ", root)
         cpy_states = [x for x in states]
         for _ in range(self.nb_tchrs - self.nb_fair):
             st = choice(cpy_states)
