@@ -143,7 +143,7 @@ def computes_weigh(teachers, beta=1, gamma=100):
     ws = [0]*len(teachers)
     for i in range(len(teachers)):
         nk = teachers[i].splited_data[1].shape[0]
-        ws[i] = np.exp(-beta*abs(teachers[i].metrics["EOD"] - fg)) * nk/sum_ni
+        ws[i] = np.exp(-beta*abs(teachers[i].metrics["EOD"] - fg))*nk/sum_ni
     sum_ws = sum(ws)
     for i in range(len(ws)):
         ws[i] = ws[i]/sum_ws
@@ -171,7 +171,8 @@ def fair_fed_agg(data_to_label, group=[], voters=[], fairness=fairness_metrics):
     for x in range(np.shape(preds)[1]):
         pred = list(preds[:,x])
         for i in range(len(pred)):
-            pred = pred + [pred[i]]*weighs[i]
+            if fairness[i] < 0.1:
+                pred = pred + [pred[i]]*weighs[i]
         n_y_x = np.bincount(pred)
         labels.append(np.argmax(n_y_x))
     print(">>> ", weighs)
@@ -199,8 +200,8 @@ def get_spd_weighs(x_train, preds, group, beta=100, fairness=[]):
 def get_spd_weighs_2(x_train, preds, group, beta=100, fairness=[]):
     spds = []
     i = 0
-    for yhat in preds:
-        spd = 1-fairness[i]*abs(mean(x_train[(group == 1) & (yhat == 1)]) - mean(x_train[(group == 2) & (yhat == 1)]))
+    for _ in preds:
+        spd = 1-fairness[i]#*abs(mean(x_train[(group == 1) & (yhat == 1)]) - mean(x_train[(group == 2) & (yhat == 1)]))
         i+=1
         spds.append(spd)
     
@@ -233,7 +234,7 @@ def spd_aggregator(data_to_label, voters=[], group=[], fairness=fairness_metrics
                 pred = pred + [pred[i]]*weighs[i]
         n_y_x = np.bincount(pred)
         labels.append(np.argmax(n_y_x))
-        
+    #print(weighs)
     return np.asarray(labels), weighs
 
 def methode_2(data_to_label, voters=[], group=[], fairness=fairness_metrics):

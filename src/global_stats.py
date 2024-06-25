@@ -19,9 +19,9 @@ dataset = "acsemployment_bis"
 
 (x_train, x_test, y_train, y_test, s_train, s_test) = load_student_data("AK", attr="sex")
 
-st_model = train_student(x_train, y_train, verbose=False)
+""" st_model = train_student(x_train, y_train, verbose=False)
 stats = fairness(st_model, x_test, y_test, s_test)
-print(stats)
+print(stats) """
 #print(s_train)
 
 #np.save("tmp/" + "_st_init_stats.npy", stats)
