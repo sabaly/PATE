@@ -7,9 +7,11 @@ import pandas as pd
 import multiprocessing as mp
 from multiprocessing import Pool
 import pickle
-from random import choice, seed
+from random import choice, seed, random
 from folktables import ACSDataSource, ACSEmployment
 import numpy as np
+from time import sleep
+
 
 states = ["HI", "CA", "PR", "NV", "NM", "OK", "NY", "WA", "AZ",  "MD",
 "TX", "VA", "MA", "GA", "CT", "OR", "IL", "RI", "NC", "CO", "DE", "LA", "UT",
@@ -167,17 +169,18 @@ class Ensemble:
         ind_min = 0
         nb_tchr_pr_grp = self.nb_tchrs // 4
         nb_tchr_grp = 0
-        seed(self.nb_tchrs + self.nb_fair)
+        seed(self.nb_tchrs+  self.nb_fair)
         cpy_states = [x for x in states[ind_min:ind_min+12]]
         
         for _ in range(self.nb_fair):
             st = choice(cpy_states)
             cpy_states.pop(cpy_states.index(st))
             path = root + st + "/" + st  + "_fair.pkl"
-            #print(path)
+            
             with open(path, "rb") as f:
                 tchr = pickle.load(f)
             self.tchrs.append(tchr)
+            
             if cpy_states == []: # model !
                 cpy_states = [x for x in states]
             nb_tchr_grp += 1

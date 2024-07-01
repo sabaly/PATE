@@ -18,7 +18,7 @@ with warnings.catch_warnings():
     fxn()
 
 if len(sys.argv) < 3:
-    print("Usage : fairness_impact_eval.py <nb_teachers> <nb_fair_wished>")
+    print("Usage : fairness_accuracy_impact_eval.py <nb_teachers> <nb_fair_wished>")
     exit(1)
 
 dataset = "acsemployment_bis"

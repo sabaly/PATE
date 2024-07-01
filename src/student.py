@@ -52,11 +52,11 @@ def eval_student_model(model, x_test, true_y_test, y_test, verbose=True):
 
 def load_student_data(state, year=2018, horizon="1-Year", attr="sex", alpha=[], conf=0):
     if alpha == []:
-        return load_b_student_data(state, year, horizon, attr, conf)
+        return load_b_student_data(state, year, horizon, attr)
     else:
-        return load_unb_student_data(state, year, horizon, attr, alpha, conf)
+        return load_unb_student_data(state, year, horizon, attr, alpha)
 
-def load_b_student_data(state, year=2018, horizon="1-Year", attr="sex", conf=0):
+def load_b_student_data(state, year=2018, horizon="1-Year", attr="sex"):
     data_src = ACSDataSource(survey_year=year, horizon=horizon, survey="person")
     acs_data = data_src.get_data(states=[state], download=True)
     MyACSEMployment = ACSEmployment
@@ -70,16 +70,13 @@ def load_b_student_data(state, year=2018, horizon="1-Year", attr="sex", conf=0):
             postprocess=lambda x: np.nan_to_num(x, -1)
         )
         MyACSEMployment = ACSEmploymentNew
-
-    if conf: # with/others
-        acs_data[MyACSEMployment.group] = [2 if x!=1 else 1 for x in acs_data[MyACSEMployment.group]]
     features, labels, group = MyACSEMployment.df_to_numpy(acs_data)
     x_train, x_test, y_train, y_test, s_train, s_test = train_test_split(
             features, labels, group, test_size=0.2, random_state=0
         )
     return (x_train, x_test, y_train, y_test, s_train, s_test)
 
-def load_unb_student_data(state, year=2018, horizon="1-Year", attr = "sex", alpha=[100,100], conf=0):
+def load_unb_student_data(state, year=2018, horizon="1-Year", attr = "sex", alpha=[100,100]):
     data_src = ACSDataSource(survey_year=year, horizon=horizon, survey="person")
     acs_data = data_src.get_data(states=[state], download=True)
     MyACSEMployment = ACSEmployment
@@ -93,8 +90,6 @@ def load_unb_student_data(state, year=2018, horizon="1-Year", attr = "sex", alph
             postprocess=lambda x: np.nan_to_num(x, -1)
         )
         MyACSEMployment = ACSEmploymentNew
-    if conf: # with/others
-        acs_data[MyACSEMployment.group] = [2 if x!=1 else 1 for x in acs_data[MyACSEMployment.group]]
     features, labels, group = MyACSEMployment.df_to_numpy(acs_data)
     df = pd.DataFrame(features)
     df.columns = MyACSEMployment.features

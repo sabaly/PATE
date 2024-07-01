@@ -51,7 +51,7 @@ def gaussian_noisy_vote(data_to_label, mu=0, sigma=1, voters=[]):
         labels.append(np.argmax(n_y_x))
     return labels
 
-def plurality(data_to_label, group=[], voters=[]):
+def plurality(data_to_label, beta=-1, voters=[]):
     # predictions from teachers
     if voters == []:
         voters = teachers.copy()
@@ -78,7 +78,7 @@ def plurality(data_to_label, group=[], voters=[]):
     return np.asarray(labels), np.mean(consent)
 
 methode = plurality
-def only_fair(data_to_label, group=[]):
+def only_fair(data_to_label):
     global teachers
     to_ban = []
     for i in range(len(teachers)):
@@ -87,7 +87,7 @@ def only_fair(data_to_label, group=[]):
     voters = list(set(teachers) - set(to_ban))
     return methode(data_to_label, voters=voters)
 
-def only_unfair(data_to_label, group=[]):
+def only_unfair(data_to_label):
     global teachers
     to_ban = []
     for i in range(len(teachers)):
@@ -96,7 +96,7 @@ def only_unfair(data_to_label, group=[]):
     voters = list(set(teachers) - set(to_ban))
     return methode(data_to_label, voters=voters)
 
-def weighed_vote(data_to_label, group=[], voters=[], fairness = fairness_metrics):
+def weighed_vote(data_to_label, voters=[], fairness = fairness_metrics):
     if fairness == []:
         fairness = fairness_metrics.copy()
     # predictions from teachers
@@ -131,7 +131,7 @@ def weighed_vote(data_to_label, group=[], voters=[], fairness = fairness_metrics
 # ######################
 # FairFed weighs
 # ######################
-def computes_weigh(teachers, beta=1, gamma=100):
+def computes_weigh(teachers, beta=10, gamma=100, quota=100):
     # computes global metric
     fg = 0
     sum_ni = 0
@@ -143,15 +143,16 @@ def computes_weigh(teachers, beta=1, gamma=100):
     ws = [0]*len(teachers)
     for i in range(len(teachers)):
         nk = teachers[i].splited_data[1].shape[0]
-        ws[i] = np.exp(-beta*abs(teachers[i].metrics["EOD"] - fg))*nk/sum_ni
-    sum_ws = sum(ws)
+        ws[i] = np.exp(-beta*abs(teachers[i].metrics["SPD"] - fg)) #* nk/sum_ni
+
     for i in range(len(ws)):
-        ws[i] = ws[i]/sum_ws
-    for i in range(len(ws)):
-        ws[i] = int(np.floor(gamma*ws[i]))
+        w = int(np.floor(gamma*ws[i]))
+        w = quota if w > quota else w
+        ws[i] = w
+    #print(ws)
     return ws
 
-def fair_fed_agg(data_to_label, group=[], voters=[], fairness=fairness_metrics):
+def fair_fed_agg(data_to_label, beta=5, voters=[], fairness=fairness_metrics):
     # predictions from teachers
     if fairness == []:
         fairness = fairness_metrics.copy()
@@ -165,54 +166,40 @@ def fair_fed_agg(data_to_label, group=[], voters=[], fairness=fairness_metrics):
     preds = np.asarray(preds, dtype=np.int32)
 
     # computes weighs
-    weighs = computes_weigh(voters)
+    weighs = computes_weigh(voters, beta=beta)
 	
     labels = []
     for x in range(np.shape(preds)[1]):
         pred = list(preds[:,x])
         for i in range(len(pred)):
-            if fairness[i] < 0.1:
-                pred = pred + [pred[i]]*weighs[i]
+            pred = pred + [pred[i]]*weighs[i]
         n_y_x = np.bincount(pred)
         labels.append(np.argmax(n_y_x))
-    print(">>> ", weighs)
-    print(labels[:100])
     return np.asarray(labels), weighs
 
 # ######################
 # Spd weighs
 # ######################
-def get_spd_weighs(x_train, preds, group, beta=100, fairness=[]):
-    spds = []
-    i = 0
-    for yhat in preds:
-        spd = 1-abs(mean(x_train[(group == 1) & (yhat == 1)]) - mean(x_train[(group == 2) & (yhat == 1)]))
-        i+=1
-        spds.append(spd)
-    
-    sum_ws = sum(spds)
-    for i in range(len(spds)):
-        spds[i] = spds[i]/sum_ws
-    for i in range(len(spds)):
-        spds[i] = int(np.floor(beta*spds[i]))
-    return spds
+def get_weighs(fairness=[], quota=100):
+    ws = []
+    for i in range(len(fairness)):
+        w = int(np.floor(1/fairness[i]))
+        w = quota if w > quota else w
+        ws.append(w)
 
-def get_spd_weighs_2(x_train, preds, group, beta=100, fairness=[]):
-    spds = []
-    i = 0
-    for _ in preds:
-        spd = 1-fairness[i]#*abs(mean(x_train[(group == 1) & (yhat == 1)]) - mean(x_train[(group == 2) & (yhat == 1)]))
-        i+=1
-        spds.append(spd)
-    
-    sum_ws = sum(spds)
-    for i in range(len(spds)):
-        spds[i] = spds[i]/sum_ws
-    for i in range(len(spds)):
-        spds[i] = int(np.floor(beta*spds[i]))
-    return spds
+    #print(ws)
+    return ws
 
-def spd_aggregator(data_to_label, voters=[], group=[], fairness=fairness_metrics):
+def get_weighs_2(gamma=100, beta=10, fairness=[], quota=100):
+    ws = []
+    for i in range(len(fairness)):
+        w = int(gamma * np.exp(-beta * fairness[i]))
+        w = quota if w > quota else w
+        ws.append(w)
+        
+    return ws
+
+def wv1_aggregator(data_to_label, voters=[], fairness=fairness_metrics):
     # predictions from teachers
     if voters == []:
         voters = teachers.copy()
@@ -225,19 +212,18 @@ def spd_aggregator(data_to_label, voters=[], group=[], fairness=fairness_metrics
         preds.append([p[0] for p in pred])
     preds = np.asarray(preds, dtype=np.int32)
 
-    weighs = get_spd_weighs(data_to_label, preds, group, fairness=fairness)
+    weighs = get_weighs(fairness=fairness)
     labels = []
     for x in range(np.shape(preds)[1]):
         pred = list(preds[:,x])
         for i in range(len(pred)):
-            if fairness[i] < 0.1:
-                pred = pred + [pred[i]]*weighs[i]
+            pred = pred + [pred[i]]*weighs[i]
         n_y_x = np.bincount(pred)
         labels.append(np.argmax(n_y_x))
-    #print(weighs)
+    #print(labels[:100])
     return np.asarray(labels), weighs
 
-def methode_2(data_to_label, voters=[], group=[], fairness=fairness_metrics):
+def wv2_aggregator(data_to_label, voters=[],  beta=10, fairness=fairness_metrics):
     # predictions from teachers
     if voters == []:
         voters = teachers.copy()
@@ -250,50 +236,13 @@ def methode_2(data_to_label, voters=[], group=[], fairness=fairness_metrics):
         preds.append([p[0] for p in pred])
     preds = np.asarray(preds, dtype=np.int32)
 
-    weighs = get_spd_weighs_2(data_to_label, preds, group, fairness=fairness)
+    weighs = get_weighs_2(beta=beta, fairness=fairness)
     labels = []
     for x in range(np.shape(preds)[1]):
         pred = list(preds[:,x])
         for i in range(len(pred)):
-            if fairness[i] < 0.1:
-                pred = pred + [pred[i]]*weighs[i]
+            pred = pred + [pred[i]]*weighs[i]
         n_y_x = np.bincount(pred)
         labels.append(np.argmax(n_y_x))
         
     return np.asarray(labels), weighs
-
-def update_aggregator(current):
-    choice = input("1. Plurality \t 2. LNMax\t 3. GNMax \n4. Only Fair \t 5. Only unfair\n (0 to exit)>>> ")
-    if choice == "1":
-        return plurality
-    elif choice == "2":
-        return laplacian_noisy_vote
-    elif choice == "3":
-        return gaussian_noisy_vote
-    elif choice == "4":
-        """ global methode
-        choice = input("Methode : 1. Plurality \t 2. LNMax\t 3. GNMax\n>>> ")
-        if choice == "3":
-            methode = gaussian_noisy_vote
-        elif choice == "2":
-            methode = laplacian_noisy_vote
-        else:
-            methode = plurality """
-           
-        print(f"Only Fair teachers participates using {methode.__name__}")
-        return only_fair
-    elif choice == "5":
-        """ global methode
-        choice = input("Methode : 1. Plurality \t 2. LNMax\t 3. GNMax\n>>> ")
-        if choice == "3":
-            methode = gaussian_noisy_vote
-        elif choice == "2":
-            methode = laplacian_noisy_vote
-        else:
-            methode = plurality """
-           
-        print(f"Only unfair teachers participates using {methode.__name__}") 
-        return only_unfair
-    else:
-        return current
-    

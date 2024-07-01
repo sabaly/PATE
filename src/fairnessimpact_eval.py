@@ -17,17 +17,16 @@ if len(sys.argv) > 1:
     parallel = int(sys.argv[1])
 dataset = "acsemployment_bis"
 
-(x_train, x_test, y_train, y_test, s_train, s_test) = load_student_data("AK", attr="sex")
-
-""" st_model = train_student(x_train, y_train, verbose=False)
-stats = fairness(st_model, x_test, y_test, s_test)
-print(stats) """
-#print(s_train)
-
+(x_train, x_test, y_train, y_test, s_train, s_test) = load_student_data("AK", attr="sex", alpha=[200, 70])
+""" 
+st_model = train_student(x_train, y_train, verbose=False)
+st_stats = fairness(st_model, x_test, y_test, s_test)
+#np.save("../img/st_stats.npy", st_stats)
+print(st_stats)
+exit(1) """
 #np.save("tmp/" + "_st_init_stats.npy", stats)
 
 conf = ["Normal", "Only fair", "Only unfair", "WV0", "Fairfed", "WV1", "WV2"]
-
 
 def get_agg(cf):
     if cf == "Normal":
@@ -41,22 +40,22 @@ def get_agg(cf):
     elif cf == "Fairfed":
         aggregator = fair_fed_agg
     elif cf == "WV1":
-        aggregator = spd_aggregator
+        aggregator = wv1_aggregator
     elif cf == "WV2":
-        aggregator = methode_2
+        aggregator = wv2_aggregator
     
     return aggregator
 
 def train_students(nb_teachers, nb_fair_tchrs):
-    loc_st_fairnesse = {}
+    loc_st_fairness = {}
     for cf in conf:
-        loc_st_fairnesse[cf] = []
+        loc_st_fairness[cf] = []
 
     tchrs_ensemble = Ensemble(nb_teachers, nb_fair_tchrs)
     update_teachers(tchrs_ensemble.tchrs)
     
     metric = []
-    metric_key = "SPD"
+    metric_key = "EOD"
     for tchrs in tchrs_ensemble.tchrs:
         metric.append(tchrs.metrics[metric_key])
     set_metrics(metric)
@@ -64,19 +63,20 @@ def train_students(nb_teachers, nb_fair_tchrs):
     for cf in conf:
         print(f'>>> case : {cf}')
         aggregator = get_agg(cf)
-        y_train, _ = aggregator(x_train, group=s_train)
-        yhat_test, _ = aggregator(x_test, group=s_test)
+        y_train, _ = aggregator(x_train)
+        yhat_test, _ = aggregator(x_test)
         st_model = train_student(x_train, y_train, verbose=False)
         st_stats = fairness(st_model, x_test, yhat_test, s_test)
-        loc_st_fairnesse[cf].append(st_stats[metric_key])
-    return loc_st_fairnesse
+        loc_st_fairness[cf].append(st_stats[metric_key])
+    return loc_st_fairness
 
 def wrapper(args):
     return train_students(*args)
 
-
-for nb_teachers in [5]:
+for nb_teachers in [30]:
     fig, ((ax1,ax2,ax3), (ax4,ax5,ax6)) = plt.subplots(2,3, sharey=True)
+    #ax6.set_visible(False)
+
     st_fairness = {}
     print(">>> ", nb_teachers, " teachers ")
     loc_st_fairnesses = []
